@@ -49,3 +49,22 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+
+# Ignore Vite build outputs
+/public/vite*
+
+# Ignore host-installed gems (Mac binaries, conflict with container)
+/vendor/bundle
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore editor configs
+/.vscode
+/.idea
+/.cursor
+*.swp
+
+# Ignore test coverage artifacts
+/coverage
