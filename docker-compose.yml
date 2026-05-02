@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:18
+    restart: always
+    environment:
+      TZ: Asia/Tokyo
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    # 起動毎に bundle install と db:prepare を実行（冪等な起動）
+    command: bash -c "bundle install && bundle exec rails db:prepare && rm -f tmp/pids/server.pid && bin/dev"
+    tty: true
+    stdin_open: true
+    volumes:
+      - .:/app:cached
+      - bundle_cache:/usr/local/bundle
+      - node_modules:/app/node_modules
+    environment:
+      TZ: Asia/Tokyo
+      RAILS_ENV: development
+      DATABASE_URL: ${DATABASE_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "3000:3000"
+      - "3036:3036"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  bundle_cache:
+  node_modules:
