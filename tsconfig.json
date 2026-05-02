@@ -23,11 +23,11 @@
 
       // === パスエイリアス ===
       "paths": {
-        "@/*": ["./app/javascript/*"]          // @/components/Foo で書ける
+        "@/*": ["./app/frontend/*"]          // @/components/Foo で書ける
       }
     },
     "include": [
-      "app/javascript/**/*",                 // フロントエンドのソース
+      "app/frontend/**/*",                 // フロントエンドのソース
       "vite.config.ts"                       // Vite設定ファイル自体
     ]
   }
