@@ -3,6 +3,7 @@ class User < ApplicationRecord
 
   # アソシエーション
   has_many :pacts, dependent: :destroy
+  has_many :sessions, dependent: :destroy
   # CheckIn / AiGeneration は v1.1 で実装
   # has_many :check_ins, through: :pacts
   # has_many :ai_generations, dependent: :destroy
