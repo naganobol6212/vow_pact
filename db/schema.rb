@@ -10,9 +10,28 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_03_115041) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_03_120439) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "pacts", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.text "constraint_text", null: false
+    t.datetime "created_at", null: false
+    t.date "deadline", null: false
+    t.integer "difficulty", null: false
+    t.text "difficulty_reason"
+    t.text "goal", null: false
+    t.datetime "signed_at", null: false
+    t.integer "status", default: 0, null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["deadline"], name: "index_pacts_on_deadline"
+    t.index ["status"], name: "index_pacts_on_status"
+    t.index ["user_id", "status"], name: "index_pacts_on_user_id_and_status"
+    t.index ["user_id"], name: "index_pacts_on_user_id"
+  end
 
   create_table "users", force: :cascade do |t|
     t.string "avatar_url"
@@ -26,4 +45,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_03_115041) do
     t.datetime "updated_at", null: false
     t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true
   end
+
+  add_foreign_key "pacts", "users"
 end
