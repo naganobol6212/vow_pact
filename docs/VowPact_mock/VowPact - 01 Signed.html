@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VowPact — 契約締結後</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&family=Caveat:wght@500;600&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  :root {
+    --parchment: #f4e8d0;
+    --ink: #2c1810;
+    --seal: #8b1a1a;
+    --gold: #c9a961;
+    --gray: #6b6b6b;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #ece2cf;
+    font-family: "Noto Sans JP", system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  ruby rt {
+    font-family: "Noto Serif JP", serif;
+  }
+  button:hover {
+    filter: brightness(1.06);
+  }
+  button:active {
+    transform: translateY(1px);
+  }
+  /* DesignCanvas のフレーム内側に余白を出さず固定サイズで見せる */
+  .frame-shell {
+    background: linear-gradient(180deg, #ece2cf 0%, #d8c9a8 100%);
+    padding: 16px;
+    box-sizing: border-box;
+    height: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: auto;
+  }
+  .phone-bezel {
+    width: 412px;
+    border-radius: 36px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -30px rgba(44,24,16,0.45), 0 6px 18px rgba(44,24,16,0.12);
+    background: #fbf6ec;
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="screens/signed.jsx"></script>
+<script type="text/babel" src="screens/share-card.jsx"></script>
+
+<script type="text/babel">
+  const { DesignCanvas, DCSection, DCArtboard } = window;
+
+  function App() {
+    return (
+      <DesignCanvas title="VowPact / 01. 契約締結後の画面">
+        <DCSection id="screen" title="画面：契約締結後（モバイル）">
+          <DCArtboard id="phone-default" label="iPhone 14 Pro · 412×900" width={444} height={980}>
+            <div className="frame-shell">
+              <div className="phone-bezel">
+                <SignedScreen width={412} />
+              </div>
+            </div>
+          </DCArtboard>
+          <DCArtboard id="phone-narrow" label="iPhone SE · 375×900" width={407} height={980}>
+            <div className="frame-shell">
+              <div className="phone-bezel" style={{ width: 375 }}>
+                <SignedScreen width={375} />
+              </div>
+            </div>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="share" title="X投稿用 シェアカード（1080×1080想定 / 540表示）">
+          <DCArtboard id="share-parchment" label="羊皮紙 + 朱印" width={580} height={580}>
+            <div style={{ padding: 20, background: "#ece2cf", height: "100%", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ boxShadow: "0 24px 50px -24px rgba(44,24,16,0.45)" }}>
+                <ShareCard size={540} />
+              </div>
+            </div>
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+
+</body>
+</html>
