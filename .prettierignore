@@ -1,0 +1,21 @@
+# モックアップ（外部生成、書き換えない）
+docs/VowPact_mock/
+
+# Rails 自動生成のエラーページ
+public/*.html
+
+# 設計書（外部生成、書き換えない）
+docs/api_design.md
+docs/data_model.md
+docs/setup_guide.md
+
+# Rails 設定ファイル（インデント慣習）
+config/
+
+# 既存の自動生成ファイル
+public/vite*/
+node_modules/
+tmp/
+log/
+storage/
+vendor/

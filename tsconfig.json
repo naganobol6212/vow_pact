@@ -1,33 +1,33 @@
 {
-    "compilerOptions": {
-      // === ターゲット環境 ===
-      "target": "ESNext",                    // 最新JSにコンパイル
-      "module": "ESNext",                    // Vite用のモジュール形式
-      "moduleResolution": "bundler",         // Vite/webpack向け解決方式
-      "lib": ["ESNext", "DOM", "DOM.Iterable"], // ブラウザAPIの型を有効化
+  "compilerOptions": {
+    // === ターゲット環境 ===
+    "target": "ESNext", // 最新JSにコンパイル
+    "module": "ESNext", // Vite用のモジュール形式
+    "moduleResolution": "bundler", // Vite/webpack向け解決方式
+    "lib": ["ESNext", "DOM", "DOM.Iterable"], // ブラウザAPIの型を有効化
 
-      // === JSX設定 ===
-      "jsx": "react-jsx",                    // React 17+ の新JSX変換
-      // === 型チェック ===
-      "strict": true,                        // 厳格な型チェック
-      "skipLibCheck": true,                  // 外部ライブラリの型チェックをスキップ
-      "forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字を厳密に
+    // === JSX設定 ===
+    "jsx": "react-jsx", // React 17+ の新JSX変換
+    // === 型チェック ===
+    "strict": true, // 厳格な型チェック
+    "skipLibCheck": true, // 外部ライブラリの型チェックをスキップ
+    "forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字を厳密に
 
-      // === Vite連携 ===
-      "noEmit": true,                        // コンパイルはViteに任せる
-      "isolatedModules": true,               // 各ファイル独立コンパイル
-      "esModuleInterop": true,               // CommonJS との互換性
-      "allowImportingTsExtensions": true,    // .ts 拡張子のimportを許可
-      "resolveJsonModule": true,             // JSON ファイルのimportを許可
-      "useDefineForClassFields": true,       // クラスフィールドの初期化方式
+    // === Vite連携 ===
+    "noEmit": true, // コンパイルはViteに任せる
+    "isolatedModules": true, // 各ファイル独立コンパイル
+    "esModuleInterop": true, // CommonJS との互換性
+    "allowImportingTsExtensions": true, // .ts 拡張子のimportを許可
+    "resolveJsonModule": true, // JSON ファイルのimportを許可
+    "useDefineForClassFields": true, // クラスフィールドの初期化方式
 
-      // === パスエイリアス ===
-      "paths": {
-        "@/*": ["./app/frontend/*"]          // @/components/Foo で書ける
-      }
-    },
-    "include": [
-      "app/frontend/**/*",                 // フロントエンドのソース
-      "vite.config.ts"                       // Vite設定ファイル自体
-    ]
-  }
+    // === パスエイリアス ===
+    "paths": {
+      "@/*": ["./app/frontend/*"] // @/components/Foo で書ける
+    }
+  },
+  "include": [
+    "app/frontend/**/*", // フロントエンドのソース
+    "vite.config.ts" // Vite設定ファイル自体
+  ]
+}
