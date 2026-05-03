@@ -63,3 +63,8 @@ group :development do
 end
 
 gem "vite_rails", "~> 3.10"
+
+# JSON シリアライザー（API レスポンス整形）
+gem "alba"
+
+gem "ruby-openai"
