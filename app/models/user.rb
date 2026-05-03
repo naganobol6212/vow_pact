@@ -1,8 +1,9 @@
 class User < ApplicationRecord
   has_secure_password
 
-  # アソシエーション（Pact / CheckIn / AiGeneration は v1.1 で実装）
-  # has_many :pacts, dependent: :destroy
+  # アソシエーション
+  has_many :pacts, dependent: :destroy
+  # CheckIn / AiGeneration は v1.1 で実装
   # has_many :check_ins, through: :pacts
   # has_many :ai_generations, dependent: :destroy
 
