@@ -68,3 +68,6 @@ gem "vite_rails", "~> 3.10"
 gem "alba"
 
 gem "ruby-openai"
+
+# CORS（React フロントエンドからの通信許可）
+gem "rack-cors"
