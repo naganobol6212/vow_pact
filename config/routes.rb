@@ -17,6 +17,13 @@ Rails.application.routes.draw do
       end
 
       resources :pacts, only: [ :index, :create, :show, :update, :destroy ]
+
+      namespace :ai do
+        post "goals",        to: "goals#create"
+        post "constraints",  to: "constraints#create"
+        post "difficulties", to: "difficulties#create"
+        post "titles",       to: "titles#create"
+      end
     end
   end
 
