@@ -1,0 +1,18 @@
+#!/bin/bash
+# RSpec 実行ラッパー
+#
+# docker-compose.yml は RAILS_ENV=development / DATABASE_URL（development DB）を固定している。
+# rspec を素のまま実行すると development 環境・DB で動作してしまうため、
+# このラッパーで test 環境・test DB を明示的に指定して実行する。
+#
+# 使い方:
+#   ./bin/rspec                              # 全テスト
+#   ./bin/rspec spec/models/user_spec.rb     # 特定ファイル
+#   ./bin/rspec spec/models/user_spec.rb:42  # 特定行
+
+set -e
+
+docker compose exec \
+  -e RAILS_ENV=test \
+  -e DATABASE_URL=postgresql://vow_pact:password@db:5432/vow_pact_test \
+  web bundle exec rspec "$@"
