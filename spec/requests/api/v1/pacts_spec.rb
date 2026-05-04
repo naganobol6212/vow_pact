@@ -93,4 +93,156 @@ RSpec.describe "Api::V1::Pacts", type: :request do
       end
     end
   end
+
+  describe "GET /api/v1/pacts/:id" do
+    let!(:my_pact) { create(:pact, user: user, goal: "自分の契約") }
+    let!(:other_user) { create(:user, email: "other@example.com") }
+    let!(:other_pact) { create(:pact, user: other_user, goal: "他人の契約") }
+
+    context "ログイン中で自分の契約を取得する場合" do
+      before { post "/api/v1/auth/login", params: login_params, as: :json }
+
+      it "200 OK を返し、契約詳細を返す" do
+        get "/api/v1/pacts/#{my_pact.id}", as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body["id"]).to eq(my_pact.id)
+        expect(response.parsed_body["goal"]).to eq("自分の契約")
+      end
+    end
+
+    context "ログイン中で他人の契約を取得しようとする場合" do
+      before { post "/api/v1/auth/login", params: login_params, as: :json }
+
+      it "404 Not Found を返す（構造的に他人の契約には到達不可）" do
+        get "/api/v1/pacts/#{other_pact.id}", as: :json
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    context "存在しない id の場合" do
+      before { post "/api/v1/auth/login", params: login_params, as: :json }
+
+      it "404 Not Found を返す" do
+        get "/api/v1/pacts/999999", as: :json
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    context "未ログインの場合" do
+      it "401 Unauthorized を返す" do
+        get "/api/v1/pacts/#{my_pact.id}", as: :json
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
+  describe "PATCH /api/v1/pacts/:id" do
+    let!(:my_pact) do
+      create(:pact,
+             user: user,
+             goal: "元の目標",
+             constraint_text: "元の制約",
+             difficulty: 3,
+             deadline: 30.days.from_now.to_date)
+    end
+    let!(:other_user) { create(:user, email: "other@example.com") }
+    let!(:other_pact) { create(:pact, user: other_user) }
+
+    context "ログイン中で goal / constraint_text を編集する場合" do
+      before { post "/api/v1/auth/login", params: login_params, as: :json }
+
+      it "200 OK を返し、編集する" do
+        patch "/api/v1/pacts/#{my_pact.id}", params: {
+          goal: "新しい目標",
+          constraint_text: "新しい制約"
+        }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body["goal"]).to eq("新しい目標")
+        expect(response.parsed_body["constraint_text"]).to eq("新しい制約")
+      end
+    end
+
+    context "deadline / difficulty / signed_at を変更しようとする場合" do
+      before { post "/api/v1/auth/login", params: login_params, as: :json }
+
+      it "200 OK を返すが、編集禁止属性は無視される" do
+        original_deadline = my_pact.deadline
+        original_difficulty = my_pact.difficulty
+
+        patch "/api/v1/pacts/#{my_pact.id}", params: {
+          goal: "新しい目標",
+          deadline: 100.days.from_now.to_date.to_s,
+          difficulty: 5,
+          signed_at: 1.year.from_now.iso8601
+        }, as: :json
+
+        my_pact.reload
+        expect(response).to have_http_status(:ok)
+        expect(my_pact.goal).to eq("新しい目標")          # ← goal は変更される
+        expect(my_pact.deadline).to eq(original_deadline) # ← deadline は変わらず
+        expect(my_pact.difficulty).to eq(original_difficulty)
+      end
+    end
+
+    context "他人の契約を編集しようとする場合" do
+      before { post "/api/v1/auth/login", params: login_params, as: :json }
+
+      it "404 Not Found を返す" do
+        patch "/api/v1/pacts/#{other_pact.id}", params: { goal: "ハッキング" }, as: :json
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    context "未ログインの場合" do
+      it "401 Unauthorized を返す" do
+        patch "/api/v1/pacts/#{my_pact.id}", params: { goal: "x" }, as: :json
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
+  describe "DELETE /api/v1/pacts/:id" do
+    let!(:my_pact) { create(:pact, user: user, status: :active) }
+    let!(:other_user) { create(:user, email: "other@example.com") }
+    let!(:other_pact) { create(:pact, user: other_user, status: :active) }
+
+    context "ログイン中で自分の契約を削除する場合" do
+      before { post "/api/v1/auth/login", params: login_params, as: :json }
+
+      it "204 No Content を返し、status を abandoned に変更する（論理削除）" do
+        expect {
+          delete "/api/v1/pacts/#{my_pact.id}", as: :json
+        }.not_to change(Pact, :count)
+
+        expect(response).to have_http_status(:no_content)
+        expect(my_pact.reload.status).to eq("abandoned")
+      end
+    end
+
+    context "他人の契約を削除しようとする場合" do
+      before { post "/api/v1/auth/login", params: login_params, as: :json }
+
+      it "404 Not Found を返し、削除しない" do
+        delete "/api/v1/pacts/#{other_pact.id}", as: :json
+
+        expect(response).to have_http_status(:not_found)
+        expect(other_pact.reload.status).to eq("active")
+      end
+    end
+
+    context "未ログインの場合" do
+      it "401 Unauthorized を返す" do
+        delete "/api/v1/pacts/#{my_pact.id}", as: :json
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
 end
