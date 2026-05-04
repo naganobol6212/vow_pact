@@ -11,12 +11,14 @@ module Api
         private
 
         def render_ai_parse_error(exception)
+          Rails.logger.error("[AI parse error] #{exception.class}: #{exception.message}")
           render json: {
             errors: [ { code: "ai_parse_error", message: "AI レスポンスを解釈できませんでした。再度お試しください。" } ]
           }, status: :bad_gateway
         end
 
         def render_ai_upstream_error(exception)
+          Rails.logger.error("[AI upstream error] #{exception.class}: #{exception.message}")
           render json: {
             errors: [ { code: "ai_upstream_error", message: "AI サービスに接続できませんでした。しばらくしてから再度お試しください。" } ]
           }, status: :bad_gateway
