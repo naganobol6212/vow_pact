@@ -16,7 +16,7 @@ Rails.application.routes.draw do
         patch  "password", to: "passwords#update"
       end
 
-      resources :pacts, only: [ :index, :create ]
+      resources :pacts, only: [ :index, :create, :show, :update, :destroy ]
     end
   end
 
