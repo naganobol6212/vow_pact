@@ -15,6 +15,8 @@ Rails.application.routes.draw do
         patch  "email",    to: "users#update_email"
         patch  "password", to: "passwords#update"
       end
+
+      resources :pacts, only: [ :index, :create ]
     end
   end
 
