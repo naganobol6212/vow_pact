@@ -50,4 +50,9 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # request spec のデフォルトホスト（www.example.com）を許可するため HostAuthorization を緩和
+  # Rails 8 の HostAuthorization は DNS rebinding 攻撃対策だが、テスト環境では不要
+  config.hosts.clear
+  config.hosts << "www.example.com"
 end

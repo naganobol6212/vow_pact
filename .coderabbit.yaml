@@ -1,0 +1,16 @@
+# CodeRabbit AI コードレビュー設定
+# https://docs.coderabbit.ai/configuration
+
+language: "ja-JP"
+tone_instructions: "丁寧で建設的な日本語でレビューしてください。コードの良い点も指摘し、改善提案は理由とともに具体的に書いてください。"
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
