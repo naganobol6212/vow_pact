@@ -16,6 +16,11 @@ export class ApiError extends Error {
   }
 }
 
+function getCsrfToken(): string {
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+  return meta?.content ?? ""
+}
+
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const { method = "GET", body } = options
 
@@ -25,6 +30,7 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      "X-CSRF-Token": getCsrfToken(),
     },
     body: body ? JSON.stringify(body) : undefined,
   })
