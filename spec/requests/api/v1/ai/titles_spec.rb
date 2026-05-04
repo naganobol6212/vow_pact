@@ -44,6 +44,43 @@ RSpec.describe "Api::V1::Ai::Titles", type: :request do
       end
     end
 
+    context "OpenAI が不正な JSON を返した場合" do
+      before do
+        post "/api/v1/auth/login", params: login_params, as: :json
+        allow_any_instance_of(OpenAI::Client).to receive(:chat).and_return({
+          "choices" => [ { "message" => { "content" => "JSON ではない" } } ]
+        })
+      end
+
+      it "502 Bad Gateway を返し ai_parse_error を返す" do
+        post "/api/v1/ai/titles", params: {
+          goal: "毎日30分読書する",
+          difficulty: 4
+        }, as: :json
+
+        expect(response).to have_http_status(:bad_gateway)
+        expect(response.parsed_body["errors"][0]["code"]).to eq("ai_parse_error")
+      end
+    end
+
+    context "OpenAI への接続でネットワークエラーが発生した場合" do
+      before do
+        post "/api/v1/auth/login", params: login_params, as: :json
+        allow_any_instance_of(OpenAI::Client).to receive(:chat)
+          .and_raise(Faraday::ConnectionFailed.new("connection refused"))
+      end
+
+      it "502 Bad Gateway を返し ai_upstream_error を返す" do
+        post "/api/v1/ai/titles", params: {
+          goal: "毎日30分読書する",
+          difficulty: 4
+        }, as: :json
+
+        expect(response).to have_http_status(:bad_gateway)
+        expect(response.parsed_body["errors"][0]["code"]).to eq("ai_upstream_error")
+      end
+    end
+
     context "未ログインの場合" do
       it "401 Unauthorized を返す" do
         post "/api/v1/ai/titles", params: {
