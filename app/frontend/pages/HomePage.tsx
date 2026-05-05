@@ -1,10 +1,11 @@
-import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import Layout from "../components/Layout"
 import Button from "../components/Button"
 import { useAuth } from "../hooks/useAuth"
 
 function HomePage() {
   const { isAuthenticated, isLoading } = useAuth()
+  const navigate = useNavigate()
 
   return (
     <Layout>
@@ -22,17 +23,17 @@ function HomePage() {
         {isLoading ? (
           <p className="text-ink/60">門を開いている…</p>
         ) : isAuthenticated ? (
-          <Link to="/pacts/new/step1">
-            <Button variant="primary">新たな誓約を結ぶ</Button>
-          </Link>
+          <Button variant="primary" onClick={() => navigate("/pacts/new/step1")}>
+            新たな誓約を結ぶ
+          </Button>
         ) : (
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/login">
-              <Button variant="primary">ログイン</Button>
-            </Link>
-            <Link to="/signup">
-              <Button variant="ghost">新規登録</Button>
-            </Link>
+            <Button variant="primary" onClick={() => navigate("/login")}>
+              ログイン
+            </Button>
+            <Button variant="ghost" onClick={() => navigate("/signup")}>
+              新規登録
+            </Button>
           </div>
         )}
       </div>

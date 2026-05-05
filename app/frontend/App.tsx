@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import HomePage from "./pages/HomePage"
 import AuthPage from "./pages/AuthPage"
@@ -28,10 +28,13 @@ function App() {
               <RequireAuth>
                 <CreatePactProvider>
                   <Routes>
+                    {/* /pacts/new または /pacts/new/ への直アクセスは step1 へ */}
+                    <Route index element={<Navigate to="step1" replace />} />
                     <Route path="step1" element={<CreatePactStep1Page />} />
                     <Route path="step2" element={<CreatePactStep2Page />} />
                     <Route path="step3" element={<CreatePactStep3Page />} />
                     <Route path="step4" element={<CreatePactStep4Page />} />
+                    <Route path="*" element={<Navigate to="step1" replace />} />
                   </Routes>
                 </CreatePactProvider>
               </RequireAuth>

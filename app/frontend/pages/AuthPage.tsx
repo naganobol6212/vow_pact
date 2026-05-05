@@ -90,7 +90,10 @@ function AuthPage() {
         <div className="flex border-b border-gold/30 mb-6">
           <button
             type="button"
-            onClick={() => setMode("login")}
+            onClick={() => {
+              setMode("login")
+              setErrors({})
+            }}
             className={`flex-1 py-2 font-serif transition ${
               mode === "login" ? "text-seal border-b-2 border-seal" : "text-ink/50"
             }`}
@@ -99,7 +102,10 @@ function AuthPage() {
           </button>
           <button
             type="button"
-            onClick={() => setMode("signup")}
+            onClick={() => {
+              setMode("signup")
+              setErrors({})
+            }}
             className={`flex-1 py-2 font-serif transition ${
               mode === "signup" ? "text-seal border-b-2 border-seal" : "text-ink/50"
             }`}

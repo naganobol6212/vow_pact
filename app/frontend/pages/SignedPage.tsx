@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import Layout from "../components/Layout"
 import Button from "../components/Button"
@@ -75,9 +75,17 @@ function SignedPage() {
           <section>
             <p className="text-xs text-ink/60 font-serif">難易度</p>
             <p className="text-base text-ink">
-              {"⚔".repeat(pact.difficulty)}
-              <span className="text-ink/30">{"⚔".repeat(5 - pact.difficulty)}</span>
-              <span className="ml-2 text-sm">{pact.difficulty} / 5</span>
+              {(() => {
+                // 想定外の値（API 異常等）でも repeat() が RangeError を起こさないようクランプ
+                const d = Math.min(5, Math.max(0, pact.difficulty))
+                return (
+                  <>
+                    {"⚔".repeat(d)}
+                    <span className="text-ink/30">{"⚔".repeat(5 - d)}</span>
+                    <span className="ml-2 text-sm">{pact.difficulty} / 5</span>
+                  </>
+                )
+              })()}
             </p>
           </section>
         </div>
@@ -97,12 +105,12 @@ function SignedPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link to="/">
-            <Button variant="ghost">ホームへ</Button>
-          </Link>
-          <Link to="/pacts/new/step1">
-            <Button variant="primary">新たな誓いを立てる</Button>
-          </Link>
+          <Button variant="ghost" onClick={() => navigate("/")}>
+            ホームへ
+          </Button>
+          <Button variant="primary" onClick={() => navigate("/pacts/new/step1")}>
+            新たな誓いを立てる
+          </Button>
         </div>
       </div>
     </Layout>

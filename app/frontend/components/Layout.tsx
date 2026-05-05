@@ -1,10 +1,11 @@
 import { Link, useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
+import type { ReactNode } from "react"
 import { useAuth } from "../hooks/useAuth"
 import { api } from "../lib/api"
 
 type LayoutProps = {
-  children: React.ReactNode
+  children: ReactNode
   title?: string
   showHeader?: boolean
   showFooter?: boolean
