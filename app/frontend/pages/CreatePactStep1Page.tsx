@@ -31,17 +31,17 @@ function CreatePactStep1Page() {
   }
 
   return (
-    <Layout title="第一章：目標">
+    <Layout title="目標を決める">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8 text-center">
-          <p className="font-serif text-xl text-seal mb-2">第一章 — 誓いの目標</p>
-          <p className="text-sm text-ink/60">あなたが成し遂げたい目標を、自らの言葉で記す。</p>
+          <p className="font-serif text-xl text-seal mb-2">Step 1 / 4 ・ 目標を決める</p>
+          <p className="text-sm text-ink/60">達成したい目標を入力します。</p>
         </div>
 
         {/* AI 目標案セクション */}
         <div className="mb-8 p-4 border border-gold/40 rounded-sm bg-parchment/60">
           <h3 className="font-serif text-base text-ink mb-2">
-            <span className="text-gold mr-2">⚜</span>天啓を受ける
+            <span className="text-gold mr-2">⚜</span>AI に提案してもらう（任意）
           </h3>
           <p className="text-xs text-ink/60 mb-3">
             テーマを入力すると AI が目標案を 3 つ提案します。
@@ -60,7 +60,7 @@ function CreatePactStep1Page() {
               onClick={handleSuggest}
               disabled={suggestMutation.isPending || !theme.trim()}
             >
-              {suggestMutation.isPending ? "天啓中..." : "天啓を受ける"}
+              {suggestMutation.isPending ? "提案中..." : "AI に提案してもらう"}
             </Button>
           </div>
 
@@ -81,14 +81,14 @@ function CreatePactStep1Page() {
           )}
 
           {suggestMutation.isError && (
-            <p className="text-xs text-seal mt-2">天啓を得られませんでした。再度お試しください。</p>
+            <p className="text-xs text-seal mt-2">提案を取得できませんでした。再度お試しください。</p>
           )}
         </div>
 
         {/* 入力フォーム */}
         <form onSubmit={handleNext}>
           <FormField
-            label="あなたの目標"
+            label="目標"
             type="text"
             value={draft.goal}
             onChange={(e) => setDraft((d) => ({ ...d, goal: e.target.value }))}
@@ -98,7 +98,7 @@ function CreatePactStep1Page() {
 
           <div className="flex justify-end mt-6">
             <Button variant="primary" type="submit" disabled={!draft.goal.trim()}>
-              次へ ・ 試練を定める
+              次へ：制約を決める
             </Button>
           </div>
         </form>

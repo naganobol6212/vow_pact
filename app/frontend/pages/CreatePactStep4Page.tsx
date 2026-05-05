@@ -70,11 +70,11 @@ function CreatePactStep4Page() {
   }, [draft.deadline])
 
   return (
-    <Layout title="第四章：契約書">
+    <Layout title="契約内容の確認">
       <div className="max-w-2xl mx-auto">
         <div className="mb-6 text-center">
-          <p className="font-serif text-xl text-seal mb-2">第四章 — 契約書</p>
-          <p className="text-sm text-ink/60">記された誓いを確認し、署名する。</p>
+          <p className="font-serif text-xl text-seal mb-2">Step 4 / 4 ・ 契約内容の確認</p>
+          <p className="text-sm text-ink/60">内容を確認し、契約を結びます。</p>
         </div>
 
         {/* 契約書プレビュー */}
@@ -83,28 +83,28 @@ function CreatePactStep4Page() {
 
           <div className="space-y-5 font-serif text-ink">
             <p className="text-sm leading-relaxed">
-              我、本書に名を記す者として、以下の誓いを立てる。
+              私は以下の誓約を立てます。
             </p>
 
             <section>
-              <p className="text-xs text-ink/60 mb-1">一 目標</p>
+              <p className="text-xs text-ink/60 mb-1">1. 目標</p>
               <p className="text-base ml-4">「{draft.goal}」</p>
             </section>
 
             <section>
-              <p className="text-xs text-ink/60 mb-1">二 試練</p>
+              <p className="text-xs text-ink/60 mb-1">2. 制約</p>
               <p className="text-base ml-4">「{draft.constraintText}」</p>
             </section>
 
             <section>
-              <p className="text-xs text-ink/60 mb-1">三 期日</p>
+              <p className="text-xs text-ink/60 mb-1">3. 期日</p>
               <p className="text-base ml-4">
                 {draft.deadline}（あと {daysToDeadline} 日）
               </p>
             </section>
 
             <section>
-              <p className="text-xs text-ink/60 mb-1">四 難易度</p>
+              <p className="text-xs text-ink/60 mb-1">4. 難易度</p>
               <p className="text-base ml-4">
                 {"⚔".repeat(draft.difficulty)}
                 <span className="text-ink/30">{"⚔".repeat(5 - draft.difficulty)}</span>
@@ -113,9 +113,9 @@ function CreatePactStep4Page() {
             </section>
 
             <p className="text-sm leading-relaxed pt-4 border-t border-gold/40">
-              この誓いを破ることなく成し遂げたとき、我は紋章を得る。
+              達成すると紋章が授与されます。
               <br />
-              成し遂げられぬとき、誓いは消えゆくのみ。
+              達成できなかった場合、契約は失効します。
             </p>
           </div>
         </div>
@@ -144,7 +144,7 @@ function CreatePactStep4Page() {
             onClick={handleSign}
             disabled={createMutation.isPending}
           >
-            {createMutation.isPending ? "誓いを刻んでいる..." : "ここに誓う"}
+            {createMutation.isPending ? "契約を締結中..." : "ここに誓う"}
           </Button>
         </div>
       </div>

@@ -48,10 +48,10 @@ function CreatePactStep3Page() {
   const minDeadline = tomorrow.toISOString().slice(0, 10)
 
   return (
-    <Layout title="第三章：期日と難易度">
+    <Layout title="期日と難易度">
       <div className="max-w-2xl mx-auto">
         <div className="mb-6 text-center">
-          <p className="font-serif text-xl text-seal mb-2">第三章 — 期日を刻み、試練の重みを量る</p>
+          <p className="font-serif text-xl text-seal mb-2">Step 3 / 4 ・ 期日と難易度</p>
         </div>
 
         {/* 確認表示 */}
@@ -61,7 +61,7 @@ function CreatePactStep3Page() {
             <p className="text-sm text-ink">{draft.goal}</p>
           </div>
           <div>
-            <p className="text-xs text-ink/60 font-serif">試練</p>
+            <p className="text-xs text-ink/60 font-serif">制約</p>
             <p className="text-sm text-ink">{draft.constraintText}</p>
           </div>
         </div>
@@ -79,10 +79,10 @@ function CreatePactStep3Page() {
           {/* 難易度判定 */}
           <div className="mb-6 p-4 border border-gold/40 rounded-sm bg-parchment/60">
             <h3 className="font-serif text-base text-ink mb-2">
-              <span className="text-gold mr-2">⚜</span>難易度の天啓
+              <span className="text-gold mr-2">⚜</span>AI に難易度を判定してもらう（任意）
             </h3>
             <p className="text-xs text-ink/60 mb-3">
-              目標・試練・期日から AI が難易度（1〜5）を判定します。
+              目標・制約・期日から AI が難易度（1〜5）を判定します。
             </p>
             <Button
               variant="secondary"
@@ -109,7 +109,7 @@ function CreatePactStep3Page() {
 
             {judgeMutation.isError && (
               <p className="text-xs text-seal mt-2">
-                天啓を得られませんでした。再度お試しください。
+                判定に失敗しました。再度お試しください。
               </p>
             )}
           </div>
@@ -134,7 +134,7 @@ function CreatePactStep3Page() {
               戻る
             </Button>
             <Button variant="primary" type="submit" disabled={!draft.deadline}>
-              次へ ・ 契約書を見る
+              次へ：契約内容を確認
             </Button>
           </div>
         </form>

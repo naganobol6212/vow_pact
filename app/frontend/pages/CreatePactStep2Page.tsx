@@ -37,32 +37,32 @@ function CreatePactStep2Page() {
   }
 
   return (
-    <Layout title="第二章：試練">
+    <Layout title="制約を決める">
       <div className="max-w-2xl mx-auto">
         <div className="mb-6 text-center">
-          <p className="font-serif text-xl text-seal mb-2">第二章 — 自らに課す試練</p>
-          <p className="text-sm text-ink/60">目標達成のために自らに課す制約を 1 つ定める。</p>
+          <p className="font-serif text-xl text-seal mb-2">Step 2 / 4 ・ 制約を決める</p>
+          <p className="text-sm text-ink/60">目標達成のために自分に課す制約を 1 つ決めます。</p>
         </div>
 
         {/* 目標の確認表示（Step 1 で入力した内容） */}
         <div className="mb-6 px-4 py-3 bg-parchment/60 border-l-4 border-gold rounded-sm">
-          <p className="text-xs text-ink/60 font-serif mb-1">あなたの目標</p>
+          <p className="text-xs text-ink/60 font-serif mb-1">目標</p>
           <p className="text-sm text-ink">{draft.goal}</p>
         </div>
 
         {/* AI 制約案セクション */}
         <div className="mb-8 p-4 border border-gold/40 rounded-sm bg-parchment/60">
           <h3 className="font-serif text-base text-ink mb-2">
-            <span className="text-gold mr-2">⚜</span>天啓を受ける
+            <span className="text-gold mr-2">⚜</span>AI に提案してもらう（任意）
           </h3>
-          <p className="text-xs text-ink/60 mb-3">目標に合った試練を AI が 3 つ提案します。</p>
+          <p className="text-xs text-ink/60 mb-3">目標に合った制約を AI が 3 つ提案します。</p>
           <Button
             variant="secondary"
             type="button"
             onClick={handleSuggest}
             disabled={suggestMutation.isPending}
           >
-            {suggestMutation.isPending ? "天啓中..." : "試練の天啓を受ける"}
+            {suggestMutation.isPending ? "提案中..." : "AI に提案してもらう"}
           </Button>
 
           {suggestions.length > 0 && (
@@ -82,17 +82,17 @@ function CreatePactStep2Page() {
           )}
 
           {suggestMutation.isError && (
-            <p className="text-xs text-seal mt-2">天啓を得られませんでした。再度お試しください。</p>
+            <p className="text-xs text-seal mt-2">提案を取得できませんでした。再度お試しください。</p>
           )}
         </div>
 
         <form onSubmit={handleNext}>
           <FormField
-            label="あなたの試練（制約）"
+            label="制約"
             type="text"
             value={draft.constraintText}
             onChange={(e) => setDraft((d) => ({ ...d, constraintText: e.target.value }))}
-            placeholder="例：スマホを別室に置く"
+            placeholder="例：夜 22 時以降スマホを触らない"
             required
           />
 
@@ -101,7 +101,7 @@ function CreatePactStep2Page() {
               戻る
             </Button>
             <Button variant="primary" type="submit" disabled={!draft.constraintText.trim()}>
-              次へ ・ 期日を刻む
+              次へ：期日と難易度
             </Button>
           </div>
         </form>
