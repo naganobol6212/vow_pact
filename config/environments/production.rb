@@ -80,9 +80,11 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
 
   # Enable DNS rebinding protection and other `Host` header attacks.
+  # Render が管理するドメインのみ許可（DNS rebinding 攻撃対策）。
+  # 先頭ドット形式は onrender.com とその全サブドメインを安全に許可（正規表現より厳密）。
   config.hosts = [
-    "vow-pact.onrender.com",   # Render の本番ドメイン
-    /.*\.onrender\.com/ # Render プレビュー / stagingドメイン
+    "vow-pact.onrender.com", # 本番ユーザートラフィック用
+    ".onrender.com"          # プレビュー / staging デプロイ URL 用
   ]
   # Skip DNS rebinding protection for the default health check endpoint.
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
