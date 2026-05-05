@@ -118,7 +118,7 @@ docs/  # data_model, api_design, design_guide, design_prompts, VowPact_mock/
 
 ### Pact（契約）
 
-- active 契約はユーザーごと **最大 3 つ**（4 つ目は 422）
+- active 契約はユーザーごと **最大 7 つ**（8 つ目は 422）
 - 1 契約 = 1 制約
 - 編集可: `goal`, `constraint_text` のみ（`deadline` / `difficulty` / `signed_at` 不可）
 - 削除は論理削除（`status: abandoned`）

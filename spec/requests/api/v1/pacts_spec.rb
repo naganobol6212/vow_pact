@@ -45,13 +45,13 @@ RSpec.describe "Api::V1::Pacts", type: :request do
       end
     end
 
-    context "active な契約が既に 3 つある場合" do
+    context "active な契約が既に 7 つある場合" do
       before do
         post "/api/v1/auth/login", params: login_params, as: :json
-        3.times { create(:pact, user: user, status: :active) }
+        7.times { create(:pact, user: user, status: :active) }
       end
 
-      it "422 を返し、4 つ目を作成しない" do
+      it "422 を返し、8 つ目を作成しない" do
         expect {
           post "/api/v1/pacts", params: valid_params, as: :json
         }.not_to change(Pact, :count)
