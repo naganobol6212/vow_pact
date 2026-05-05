@@ -2,8 +2,14 @@ import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import Layout from "../components/Layout"
 import Button from "../components/Button"
+import ShareButton from "../components/ShareButton"
 import { api, ApiError } from "../lib/api"
 import type { Pact } from "../types/pact"
+import {
+  SHARE_HASHTAGS,
+  SHARE_LABELS,
+  buildSignedShareText,
+} from "../constants/share"
 
 function SignedPage() {
   const { id } = useParams<{ id: string }>()
@@ -90,18 +96,18 @@ function SignedPage() {
           </section>
         </div>
 
-        {/* X シェア（Issue #26 で本実装、今は雛形） */}
+        {/* 契約締結のシェア（Issue #26） */}
         <div className="mb-6">
-          <a
-            href={`https://x.com/intent/post?text=${encodeURIComponent(
-              `誓約 ⚔ 契約 を結びました。\n目標：${pact.goal}\n#誓約契約 #vow_pact`
-            )}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block px-6 py-3 bg-ink text-parchment font-serif font-bold rounded-sm hover:opacity-90 transition"
-          >
-            𝕏 で天下に宣する
-          </a>
+          <ShareButton
+            text={buildSignedShareText({
+              goal: pact.goal,
+              constraintText: pact.constraint_text,
+              deadline: pact.deadline,
+            })}
+            url={`${window.location.origin}/pacts/${pact.id}/signed`}
+            hashtags={[...SHARE_HASHTAGS]}
+            label={SHARE_LABELS.signed}
+          />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
