@@ -12,7 +12,8 @@ module Api
       end
 
       def create
-        pact = Current.user.pacts.create!(pact_params)
+        # signed_at はサーバ側で確定する（クライアント時計の改ざんを防ぐ）。
+        pact = Current.user.pacts.create!(pact_params.merge(signed_at: Time.current))
         render json: PactSerializer.new(pact).serializable_hash, status: :created
       end
 
@@ -31,8 +32,9 @@ module Api
 
       private
 
+      # signed_at はクライアント値を許可しない（create 時にサーバ側で Time.current を merge）。
       def pact_params
-        params.permit(:goal, :constraint_text, :difficulty, :deadline, :signed_at)
+        params.permit(:goal, :constraint_text, :difficulty, :difficulty_reason, :deadline)
       end
 
       # 編集可能な属性は goal / constraint_text のみ

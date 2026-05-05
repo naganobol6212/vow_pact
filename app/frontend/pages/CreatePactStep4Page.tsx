@@ -13,7 +13,6 @@ type CreatePactInput = {
   difficulty: number
   difficulty_reason: string
   deadline: string
-  signed_at: string
 }
 
 function CreatePactStep4Page() {
@@ -23,7 +22,14 @@ function CreatePactStep4Page() {
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!draft.goal.trim() || !draft.constraintText.trim() || !draft.deadline) {
+    // 必須項目（goal / constraint / deadline）に加え、難易度未設定（0）も差し戻す。
+    // 難易度 0 はバックエンドの validates :difficulty, inclusion: 1..5 に弾かれるため。
+    if (
+      !draft.goal.trim() ||
+      !draft.constraintText.trim() ||
+      !draft.deadline ||
+      !draft.difficulty
+    ) {
       navigate("/pacts/new/step1", { replace: true })
     }
   }, [draft, navigate])
@@ -45,7 +51,6 @@ function CreatePactStep4Page() {
         difficulty: draft.difficulty,
         difficulty_reason: draft.difficultyReason,
         deadline: draft.deadline,
-        signed_at: new Date().toISOString(),
       })
       // 一覧キャッシュを破棄して次回再取得
       await queryClient.invalidateQueries({ queryKey: ["pacts"] })

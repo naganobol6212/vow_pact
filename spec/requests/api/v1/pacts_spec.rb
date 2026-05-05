@@ -16,8 +16,7 @@ RSpec.describe "Api::V1::Pacts", type: :request do
         goal: "毎日30分読書する",
         constraint_text: "スマホを別室に置く",
         difficulty: 3,
-        deadline: 30.days.from_now.to_date.to_s,
-        signed_at: Time.current.iso8601
+        deadline: 30.days.from_now.to_date.to_s
       }
     end
 
@@ -33,6 +32,16 @@ RSpec.describe "Api::V1::Pacts", type: :request do
         expect(response.parsed_body["goal"]).to eq("毎日30分読書する")
         expect(response.parsed_body["status"]).to eq("active")
         expect(response.parsed_body["user_id"]).to eq(user.id)
+      end
+
+      it "signed_at はクライアント値ではなくサーバ側の現在時刻が設定される" do
+        # 1 年後など本来あり得ない値をクライアントが送っても無視されることを保証
+        spoofed = 1.year.from_now.iso8601
+        post "/api/v1/pacts", params: valid_params.merge(signed_at: spoofed), as: :json
+
+        expect(response).to have_http_status(:created)
+        signed_at = Time.parse(response.parsed_body["signed_at"])
+        expect(signed_at).to be_within(1.minute).of(Time.current)
       end
     end
 
