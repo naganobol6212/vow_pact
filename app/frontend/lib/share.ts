@@ -15,9 +15,11 @@ export function buildTweetUrl({ text, url, hashtags }: TweetUrlParams): string {
   const parts: string[] = [`text=${encodeURIComponent(text)}`]
   if (url) parts.push(`url=${encodeURIComponent(url)}`)
   if (hashtags && hashtags.length > 0) {
-    // 誤入力で先頭に # が付いていても剥がす（X 側で必ず # を付与するため二重 # を防ぐ）
+    // 誤入力で先頭に # が付いていても剥がす（X 側で必ず # を付与するため二重 # を防ぐ）。
+    // X の hashtags 仕様はリテラルのカンマ区切りなので、各タグだけエンコードして
+    // カンマ自体はエンコードせず結合する（%2C ではセパレータと認識されない）。
     const cleaned = hashtags.map((h) => h.replace(/^#/, ""))
-    parts.push(`hashtags=${encodeURIComponent(cleaned.join(","))}`)
+    parts.push(`hashtags=${cleaned.map(encodeURIComponent).join(",")}`)
   }
   return `https://x.com/intent/post?${parts.join("&")}`
 }

@@ -20,10 +20,14 @@ describe("buildTweetUrl", () => {
     expect(url).toContain(`url=${encodeURIComponent("https://example.com/p/1")}`)
   })
 
-  it("hashtags を渡すとカンマ区切りで hashtags クエリに付く（# 不要）", () => {
-    // X 公式の intent 仕様：hashtags は # を付けずカンマ区切り
+  it("hashtags を渡すとリテラルのカンマ区切りで hashtags クエリに付く（# 不要）", () => {
+    // X 公式の intent 仕様：hashtags は # を付けずリテラルカンマ区切り。
+    // セパレータの , を %2C にエンコードしてしまうと X 側でセパレータと認識されない。
     const url = buildTweetUrl({ text: "hi", hashtags: ["vow_pact", "誓約契約"] })
-    expect(url).toContain(`hashtags=${encodeURIComponent("vow_pact,誓約契約")}`)
+    const expected = `${encodeURIComponent("vow_pact")},${encodeURIComponent("誓約契約")}`
+    expect(url).toContain(`hashtags=${expected}`)
+    // セパレータの , はリテラルのまま（%2C にしない）
+    expect(url).not.toContain("%2C")
   })
 
   it("空の hashtags 配列はクエリに含めない", () => {
@@ -33,6 +37,7 @@ describe("buildTweetUrl", () => {
 
   it("hashtags の要素先頭の # は剥がす（誤入力対策）", () => {
     const url = buildTweetUrl({ text: "hi", hashtags: ["#vow_pact", "誓約"] })
-    expect(url).toContain(`hashtags=${encodeURIComponent("vow_pact,誓約")}`)
+    const expected = `${encodeURIComponent("vow_pact")},${encodeURIComponent("誓約")}`
+    expect(url).toContain(`hashtags=${expected}`)
   })
 })
