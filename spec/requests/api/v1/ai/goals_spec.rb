@@ -41,6 +41,24 @@ RSpec.describe "Api::V1::Ai::Goals", type: :request do
       end
     end
 
+    context "ログイン中で theme が空（おまかせ／ランダムモード）の場合" do
+      before do
+        post "/api/v1/auth/login", params: login_params, as: :json
+      end
+
+      it "theme なしでも 200 OK を返し、目標案 3 つを返す" do
+        # GoalSuggester がランダムモードのプロンプトで呼ばれることを期待
+        expect_any_instance_of(::Ai::GoalSuggester).to receive(:suggest)
+          .with(theme: "")
+          .and_return([ "朝5時に起きる", "毎日1ページ哲学書を読む", "週1で新しい料理に挑戦" ])
+
+        post "/api/v1/ai/goals", params: {}, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body["goals"].size).to eq(3)
+      end
+    end
+
     context "OpenAI が不正な JSON を返した場合" do
       before do
         post "/api/v1/auth/login", params: login_params, as: :json

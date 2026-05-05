@@ -10,11 +10,12 @@ type DifficultyResponse = { difficulty: number; reason: string }
 type TitlesResponse = { titles: string[] }
 
 export function useSuggestGoals() {
-  return useMutation<GoalsResponse, ApiError, { theme: string }>({
+  // theme を省略 / 空で呼ぶと、サーバ側で「おまかせ（ランダム）モード」になる。
+  return useMutation<GoalsResponse, ApiError, { theme?: string }>({
     mutationFn: ({ theme }) =>
       api<GoalsResponse>("/ai/goals", {
         method: "POST",
-        body: { theme },
+        body: { theme: theme ?? "" },
       }),
   })
 }

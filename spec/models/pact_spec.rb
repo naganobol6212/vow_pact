@@ -108,23 +108,23 @@ RSpec.describe Pact, type: :model do
       end
     end
 
-    describe "active 契約の上限（最大3つ）" do
+    describe "active 契約の上限（最大7つ）" do
       let(:user) { create(:user) }
 
-      it "3つまでは active 契約を作れる" do
-        3.times { create(:pact, user: user, status: :active) }
-        expect(user.pacts.where(status: :active).count).to eq(3)
+      it "7つまでは active 契約を作れる" do
+        7.times { create(:pact, user: user, status: :active) }
+        expect(user.pacts.where(status: :active).count).to eq(7)
       end
 
-      it "4つ目の active 契約は弾かれる" do
-        3.times { create(:pact, user: user, status: :active) }
-        fourth = build(:pact, user: user, status: :active)
-        expect(fourth).not_to be_valid
-        expect(fourth.errors[:base]).to include("active な契約は3つまでです")
+      it "8つ目の active 契約は弾かれる" do
+        7.times { create(:pact, user: user, status: :active) }
+        eighth = build(:pact, user: user, status: :active)
+        expect(eighth).not_to be_valid
+        expect(eighth.errors[:base]).to include("active な契約は7つまでです")
       end
 
-      it "completed / abandoned はカウントしない（4つ目作成可能）" do
-        2.times { create(:pact, user: user, status: :active) }
+      it "completed / abandoned はカウントしない（8つ目作成可能）" do
+        6.times { create(:pact, user: user, status: :active) }
         create(:pact, user: user, status: :completed, completed_at: Time.current)
         create(:pact, user: user, status: :abandoned)
 
@@ -134,14 +134,14 @@ RSpec.describe Pact, type: :model do
 
       it "他ユーザーの active 契約はカウントしない" do
         other_user = create(:user)
-        3.times { create(:pact, user: other_user, status: :active) }
+        7.times { create(:pact, user: other_user, status: :active) }
 
         my_pact = build(:pact, user: user, status: :active)
         expect(my_pact).to be_valid
       end
 
       it "自分自身の更新では再カウントしない" do
-        3.times { create(:pact, user: user, status: :active) }
+        7.times { create(:pact, user: user, status: :active) }
         existing = user.pacts.first
         existing.goal = "新しい目標"
         expect(existing).to be_valid

@@ -6,8 +6,9 @@ class Pact < ApplicationRecord
 
   belongs_to :user
 
-  # 進行中の契約は最大 3 つまで（ユーザーごと）
-  MAX_ACTIVE_PACTS = 3
+  # 進行中の契約は最大 7 つまで（ユーザーごと）。
+  # 「曜日ごとに別の誓い」を組める実用性と、誓いの重みを保つバランスから 7 を採用。
+  MAX_ACTIVE_PACTS = 7
 
   enum :status, { active: 0, completed: 1, failed: 2, abandoned: 3 }
 

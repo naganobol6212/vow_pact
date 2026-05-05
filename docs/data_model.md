@@ -58,7 +58,7 @@
 └──────┬──────┘
        │ 1
        │
-       │ N (最大3つの active)
+       │ N (最大7つの active)
        ▼
 ┌─────────────┐  1     1  ┌──────────────┐
 │   pacts     │◀──────────│   crests     │
@@ -223,21 +223,25 @@ enum :status, {
 - `difficulty`: 必須、1-5の範囲
 - `deadline`: 必須、未来の日付
 - `status`: enum値のみ
-- **active 状態の契約はユーザーごとに最大3つまで**（カスタムバリデーション）
+- **active 状態の契約はユーザーごとに最大7つまで**（カスタムバリデーション）
 
 #### カスタムバリデーション例
 
 ```ruby
 class Pact < ApplicationRecord
+  MAX_ACTIVE_PACTS = 7
+
   validate :active_pacts_limit, if: -> { active? }
 
   private
 
   def active_pacts_limit
-    return unless user.pacts.where(status: :active)
-                          .where.not(id: id)
-                          .count >= 3
-    errors.add(:base, "active状態の契約は3つまでです")
+    return unless user
+
+    active_count = user.pacts.where(status: :active).where.not(id: id).count
+    return if active_count < MAX_ACTIVE_PACTS
+
+    errors.add(:base, "active な契約は#{MAX_ACTIVE_PACTS}つまでです")
   end
 end
 ```

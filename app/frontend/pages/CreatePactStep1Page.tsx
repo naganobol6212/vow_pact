@@ -15,9 +15,22 @@ function CreatePactStep1Page() {
   const suggestMutation = useSuggestGoals()
 
   const handleSuggest = async () => {
+    if (suggestMutation.isPending) return
     if (!theme.trim()) return
     try {
       const res = await suggestMutation.mutateAsync({ theme })
+      setSuggestions(res.goals ?? [])
+    } catch {
+      setSuggestions([])
+    }
+  }
+
+  // テーマなしで AI に「突拍子もない / ストレッチ / 面白い / 自己成長」をミックスさせる。
+  const handleRandomSuggest = async () => {
+    // disabled が描画される前の連打で重複リクエストを防ぐためのガード。
+    if (suggestMutation.isPending) return
+    try {
+      const res = await suggestMutation.mutateAsync({})
       setSuggestions(res.goals ?? [])
     } catch {
       setSuggestions([])
@@ -63,6 +76,23 @@ function CreatePactStep1Page() {
               {suggestMutation.isPending ? "提案中..." : "AI に提案してもらう"}
             </Button>
           </div>
+
+          <div className="flex items-center gap-2 mb-3">
+            <span className="flex-1 border-t border-ink/20" />
+            <span className="text-xs text-ink/50">または</span>
+            <span className="flex-1 border-t border-ink/20" />
+          </div>
+
+          <Button
+            variant="ghost"
+            type="button"
+            onClick={handleRandomSuggest}
+            disabled={suggestMutation.isPending}
+            fullWidth
+          >
+            <span aria-hidden="true" className="mr-1">🎲</span>
+            {suggestMutation.isPending ? "提案中..." : "おまかせで提案してもらう"}
+          </Button>
 
           {suggestions.length > 0 && (
             <ul className="space-y-2">

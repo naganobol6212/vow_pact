@@ -1,14 +1,17 @@
 module Ai
   # ユーザーが入力したテーマに対し、自己鍛錬の目標案を 3 つ生成する。
+  # theme が空文字 / nil の場合は「おまかせ（ランダム）モード」として、
+  # 4 タイプ（突拍子もない / ストレッチ / 面白い / 自己成長）からミックスして提案する。
   class GoalSuggester < BaseSuggester
     def suggest(theme:)
-      result = chat_json(build_prompt(theme))
+      prompt = theme.to_s.strip.empty? ? build_random_prompt : build_themed_prompt(theme)
+      result = chat_json(prompt)
       Array(result["goals"]).first(3)
     end
 
     private
 
-    def build_prompt(theme)
+    def build_themed_prompt(theme)
       <<~PROMPT
         あなたはユーザーの自己鍛錬を支援する AI です。
         ユーザーが「#{theme}」というテーマで自己鍛錬の目標を立てたいと考えています。
@@ -19,6 +22,28 @@ module Ai
         - 1 文（30 文字以内）
         - 数値や頻度などを含めて行動が明確になるようにする
         - 例：「毎日 30 分読書する」「週 3 回ジョギングする」
+
+        以下の JSON 形式で返してください:
+        {"goals": ["目標案 1", "目標案 2", "目標案 3"]}
+      PROMPT
+    end
+
+    def build_random_prompt
+      <<~PROMPT
+        あなたはユーザーの自己鍛錬を支援する AI です。
+        ユーザーはテーマを指定していません。「おまかせ」で目標案を 3 つ提案してください。
+
+        以下の 4 タイプから多様性が出るように選び、3 案で偏りが出ないようにしてください:
+        - 突拍子もないが実は実行可能なもの（例：1 ヶ月毎日違う言語の挨拶を覚える）
+        - 自分を高めるストレッチな挑戦（例：朝 5 時起きを 30 日続ける）
+        - 面白くて続けやすいもの（例：毎日 1 つ新しい料理を作る）
+        - 楽しめる自己成長系（例：毎日 1 ページ哲学書を読む）
+
+        条件:
+        - 現代日本語の自然な表現で書く（中世ファンタジー風の表現は使わない）
+        - 1 文（30 文字以内）
+        - 数値や頻度などを含めて行動が明確になるようにする
+        - 提案ごとに方向性が異なるようにする（似たものを並べない）
 
         以下の JSON 形式で返してください:
         {"goals": ["目標案 1", "目標案 2", "目標案 3"]}

@@ -16,7 +16,7 @@ type CreatePactInput = {
 }
 
 function CreatePactStep4Page() {
-  const { draft, resetDraft } = useCreatePact()
+  const { draft } = useCreatePact()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -54,7 +54,9 @@ function CreatePactStep4Page() {
       })
       // 一覧キャッシュを破棄して次回再取得
       await queryClient.invalidateQueries({ queryKey: ["pacts"] })
-      resetDraft()
+      // resetDraft はここで呼ばない：呼ぶと draft が空になり、本ページの useEffect ガードが
+      // 発火して navigate("/pacts/new/step1") が後勝ちで起きてしまう。
+      // CreatePactProvider は /pacts/new/* スコープなので SignedPage 遷移で自動破棄される。
       navigate(`/pacts/${pact.id}/signed`)
     } catch (err) {
       if (err instanceof ApiError) {
