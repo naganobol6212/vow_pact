@@ -236,10 +236,12 @@ class Pact < ApplicationRecord
   private
 
   def active_pacts_limit
-    return unless user.pacts.where(status: :active)
-                          .where.not(id: id)
-                          .count >= MAX_ACTIVE_PACTS
-    errors.add(:base, "active状態の契約は#{MAX_ACTIVE_PACTS}つまでです")
+    return unless user
+
+    active_count = user.pacts.where(status: :active).where.not(id: id).count
+    return if active_count < MAX_ACTIVE_PACTS
+
+    errors.add(:base, "active な契約は#{MAX_ACTIVE_PACTS}つまでです")
   end
 end
 ```
