@@ -15,6 +15,7 @@ function CreatePactStep1Page() {
   const suggestMutation = useSuggestGoals()
 
   const handleSuggest = async () => {
+    if (suggestMutation.isPending) return
     if (!theme.trim()) return
     try {
       const res = await suggestMutation.mutateAsync({ theme })
@@ -26,6 +27,8 @@ function CreatePactStep1Page() {
 
   // テーマなしで AI に「突拍子もない / ストレッチ / 面白い / 自己成長」をミックスさせる。
   const handleRandomSuggest = async () => {
+    // disabled が描画される前の連打で重複リクエストを防ぐためのガード。
+    if (suggestMutation.isPending) return
     try {
       const res = await suggestMutation.mutateAsync({})
       setSuggestions(res.goals ?? [])
