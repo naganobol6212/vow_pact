@@ -7,4 +7,12 @@ class HomeController < ActionController::Base
 
   def index
   end
+
+  # 公開契約ページ（/p/:id）。
+  # X クローラーは JS を実行しないため、OGP meta タグを HTML に直接埋め込んで配信する。
+  # 公開設定 OFF / 存在しない id でも 200 で SPA を返し、React 側で「見つかりません」を表示。
+  def public_pact
+    @pact = Pact.where(is_public: true).includes(:user).find_by(id: params[:id])
+    render :index
+  end
 end

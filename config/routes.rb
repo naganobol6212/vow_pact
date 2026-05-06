@@ -53,6 +53,10 @@ Rails.application.routes.draw do
     end
   end
 
+  # 公開契約ページ。X クローラーは JS を実行しないため、og:image / twitter:card 等の OGP meta を
+  # サーバーサイドで HTML に埋め込む必要がある。SPA fallback より前に定義する。
+  get "/p/:id", to: "home#public_pact", constraints: { id: /\d+/ }, as: :public_pact_share
+
   root "home#index"
   get "*path", to: "home#index", constraints: ->(req) {
     !req.path.start_with?("/api", "/up", "/rails", "/letter_opener")

@@ -9,6 +9,28 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <%# 公開契約ページ（/p/:id）の OGP / Twitter Card meta タグ。
+        SPA の useEffect で注入する meta は X クローラーから見えないため、
+        サーバーサイドで HTML に直接埋め込む。 %>
+    <% if defined?(@pact) && @pact.present? %>
+      <% page_url    = "#{request.protocol}#{request.host_with_port}/p/#{@pact.id}" %>
+      <% image_url   = "#{request.protocol}#{request.host_with_port}/api/v1/public/pacts/#{@pact.id}/og.png" %>
+      <% nickname    = @pact.user&.nickname.presence || "誓約者" %>
+      <% page_title  = "#{nickname} の誓約：#{@pact.goal}" %>
+      <% description = "目標：#{@pact.goal} ／ 制約：#{@pact.constraint_text} ／ 期日：#{@pact.deadline}" %>
+      <meta name="description"          content="<%= description %>">
+      <meta property="og:title"         content="<%= page_title %>">
+      <meta property="og:description"   content="<%= description %>">
+      <meta property="og:url"           content="<%= page_url %>">
+      <meta property="og:image"         content="<%= image_url %>">
+      <meta property="og:type"          content="article">
+      <meta property="og:site_name"     content="Vow Pact">
+      <meta name="twitter:card"         content="summary_large_image">
+      <meta name="twitter:title"        content="<%= page_title %>">
+      <meta name="twitter:description"  content="<%= description %>">
+      <meta name="twitter:image"        content="<%= image_url %>">
+    <% end %>
+
     <%= yield :head %>
 
     <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
