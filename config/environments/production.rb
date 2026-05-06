@@ -46,8 +46,23 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
-  # Replace the default in-process memory cache store with a durable alternative.
-  config.cache_store = :solid_cache_store
+  # cache store: 当面は in-process MemoryStore を使う。
+  # Solid Cache の migration（db/cache_migrate/）が未生成で本番 DB にテーブルが無く、
+  # Rails.cache.fetch 時に「relation does not exist」で 500 になっていたため。
+  # Render Free tier は単一プロセス + 短いライフサイクル（30 分でスピンダウン）なので、
+  # 本格的な永続キャッシュが必要になった段階で `bin/rails solid_cache:install` で
+  # migration を作成して Solid Cache に戻す。
+  #
+  # トレードオフ:
+  #   - スピンダウン後の最初のアクセスはキャッシュが空のため OG image 生成に 10 秒以上かかり、
+  #     X クローラーのタイムアウトに引っかかる可能性がある（SignedPage の useEffect で
+  #     ユーザー操作中に先取りフェッチして温める対応で緩和）。
+  #   - PNG（数百 KB）をそのまま保持するとメモリを食うので、compress: true で gzip 圧縮する。
+  config.cache_store = :memory_store, {
+    size: 256.megabytes,
+    compress: true,
+    compress_threshold: 1.kilobyte
+  }
 
   # Replace the default in-process and non-durable queuing backend for Active Job.
   config.active_job.queue_adapter = :solid_queue
