@@ -10,6 +10,8 @@ import SignedPage from "./pages/SignedPage"
 import PactsListPage from "./pages/PactsListPage"
 import PactDetailPage from "./pages/PactDetailPage"
 import CrestsGalleryPage from "./pages/CrestsGalleryPage"
+import RankingsPage from "./pages/RankingsPage"
+import SettingsPage from "./pages/SettingsPage"
 import RequireAuth from "./components/RequireAuth"
 import { CreatePactProvider } from "./contexts/CreatePactContext"
 
@@ -80,6 +82,26 @@ function App() {
             element={
               <RequireAuth>
                 <CrestsGalleryPage />
+              </RequireAuth>
+            }
+          />
+
+          {/* ランキング（誓約者の番付） */}
+          <Route
+            path="/rankings"
+            element={
+              <RequireAuth>
+                <RankingsPage />
+              </RequireAuth>
+            }
+          />
+
+          {/* 設定（プロフィール / メール / パスワード / ログアウト / 正式登録） */}
+          <Route
+            path="/settings"
+            element={
+              <RequireAuth>
+                <SettingsPage />
               </RequireAuth>
             }
           />
