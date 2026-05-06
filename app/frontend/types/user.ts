@@ -4,6 +4,7 @@ export type User = {
   nickname: string
   avatar_url: string | null
   is_public: boolean
+  is_guest: boolean
   streak_count: number
   longest_streak: number
   created_at: string
