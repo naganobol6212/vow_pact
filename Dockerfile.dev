@@ -4,6 +4,7 @@ FROM ruby:3.4.9-slim
 # OS パッケージのインストール
 # librsvg2-bin: SVG → PNG 変換用（OG image 生成、日本語フォントに強い）
 # fonts-noto-cjk: SVG 内の日本語をきれいに描画
+# fonts-noto-color-emoji: SVG 内の絵文字（🏆 等）をカラーで描画。無いとコードポイントが「丸+数字」で出る
 # imagemagick: フォールバック用
 RUN apt-get update -qq && apt-get install -y --no-install-recommends \
     build-essential \
@@ -15,6 +16,7 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
     gnupg \
     librsvg2-bin \
     fonts-noto-cjk \
+    fonts-noto-color-emoji \
     imagemagick \
     && rm -rf /var/lib/apt/lists/*
 
