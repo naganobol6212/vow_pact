@@ -59,9 +59,12 @@ Rails.application.configure do
 
   # Set host to be used by links generated in mailer templates.
   # FRONTEND_URL（例: https://vow-pact.onrender.com）からホストを抽出して使う。
-  config.action_mailer.default_url_options = {
-    host: URI.parse(ENV.fetch("FRONTEND_URL", "https://vow-pact.onrender.com")).host
-  }
+  # スキームなしの値（"vow-pact.onrender.com" 等）だと URI.parse が host=nil を返して
+  # メール内 URL がサイレントに壊れるため、起動時にアーリーフェイルさせる。
+  _frontend_url = ENV.fetch("FRONTEND_URL", "https://vow-pact.onrender.com")
+  _host = URI.parse(_frontend_url).host
+  raise "FRONTEND_URL '#{_frontend_url}' が無効です（https:// などのスキームを含めてください）" if _host.nil?
+  config.action_mailer.default_url_options = { host: _host }
 
   # SMTP 環境変数が揃っていれば実際にメールを送る。揃っていなければ :test 配信で skip。
   # （MVP 段階ではメールサービス契約前でも本番起動できるようにする）
