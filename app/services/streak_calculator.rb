@@ -10,7 +10,8 @@ class StreakCalculator
     @user = user
   end
 
-  def recalculate!
+  # サービスクラスのメインメソッドは call に統一（CLAUDE.md 規約）。
+  def call
     # 同一 user の並行 check-in で streak がレースしないよう row lock を取る。
     @user.with_lock do
       new_streak = calculate_current_streak

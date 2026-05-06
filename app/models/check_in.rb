@@ -5,6 +5,11 @@ class CheckIn < ApplicationRecord
 
   NOTE_MAX_LENGTH = 500
 
+  # checked_on はサーバ側で自動設定（チート防止）。
+  # クライアント値はコントローラの strong params で除外される設計（Issue #19 で実装）。
+  # 内部呼び出しで明示指定された場合（テスト・データ補修等）は尊重する。
+  before_validation :set_checked_on_to_today, on: :create
+
   validates :checked_on, presence: true
   validates :status, presence: true
   validates :note, length: { maximum: NOTE_MAX_LENGTH }, allow_blank: true
@@ -40,6 +45,10 @@ class CheckIn < ApplicationRecord
   end
 
   def recalc_user_streak
-    StreakCalculator.new(pact.user).recalculate!
+    StreakCalculator.new(pact.user).call
+  end
+
+  def set_checked_on_to_today
+    self.checked_on = Date.current if checked_on.blank?
   end
 end

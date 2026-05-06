@@ -9,10 +9,10 @@ RSpec.describe StreakCalculator, type: :service do
     pact.check_ins.new(checked_on: on, status: status).save!(validate: false)
   end
 
-  describe "#recalculate!" do
+  describe "#call" do
     context "チェックインが 0 件のとき" do
       it "streak_count = 0、longest_streak = 0" do
-        described_class.new(user).recalculate!
+        described_class.new(user).call
         expect(user.reload.streak_count).to eq(0)
         expect(user.longest_streak).to eq(0)
       end
@@ -23,7 +23,7 @@ RSpec.describe StreakCalculator, type: :service do
         pact = create(:pact, user: user, signed_at: 7.days.ago)
         add_check_in(pact: pact, on: Date.current, status: :kept)
 
-        described_class.new(user).recalculate!
+        described_class.new(user).call
         expect(user.reload.streak_count).to eq(1)
       end
     end
@@ -34,7 +34,7 @@ RSpec.describe StreakCalculator, type: :service do
         add_check_in(pact: pact, on: Date.current - 1, status: :kept)
         add_check_in(pact: pact, on: Date.current,     status: :kept)
 
-        described_class.new(user).recalculate!
+        described_class.new(user).call
         expect(user.reload.streak_count).to eq(2)
       end
     end
@@ -48,7 +48,7 @@ RSpec.describe StreakCalculator, type: :service do
         add_check_in(pact: pact, on: Date.current - 3, status: :kept)
         add_check_in(pact: pact, on: Date.current - 2, status: :kept)
 
-        described_class.new(user).recalculate!
+        described_class.new(user).call
         expect(user.reload.streak_count).to eq(0)
       end
     end
@@ -61,7 +61,7 @@ RSpec.describe StreakCalculator, type: :service do
         add_check_in(pact: pact, on: Date.current - 1, status: :kept)
         # 今日はまだチェックインしていない
 
-        described_class.new(user).recalculate!
+        described_class.new(user).call
         expect(user.reload.streak_count).to eq(3)
       end
     end
@@ -74,7 +74,7 @@ RSpec.describe StreakCalculator, type: :service do
         add_check_in(pact: pact, on: Date.current - 1, status: :kept)
         add_check_in(pact: pact, on: Date.current,     status: :kept)
 
-        described_class.new(user).recalculate!
+        described_class.new(user).call
         expect(user.reload.streak_count).to eq(2)
       end
     end
@@ -87,7 +87,7 @@ RSpec.describe StreakCalculator, type: :service do
         add_check_in(pact: pact, on: Date.current - 1, status: :kept)
         add_check_in(pact: pact, on: Date.current,     status: :kept)
 
-        described_class.new(user).recalculate!
+        described_class.new(user).call
         # 当日 + 昨日 + skipped 飛ばし + 一昨々日 kept = 3 日カウント
         expect(user.reload.streak_count).to eq(3)
       end
@@ -97,7 +97,7 @@ RSpec.describe StreakCalculator, type: :service do
         add_check_in(pact: pact, on: Date.current - 1, status: :skipped)
         add_check_in(pact: pact, on: Date.current,     status: :skipped)
 
-        described_class.new(user).recalculate!
+        described_class.new(user).call
         expect(user.reload.streak_count).to eq(0)
       end
     end
@@ -109,7 +109,7 @@ RSpec.describe StreakCalculator, type: :service do
         add_check_in(pact: pact_a, on: Date.current, status: :kept)
         add_check_in(pact: pact_b, on: Date.current, status: :kept)
 
-        described_class.new(user).recalculate!
+        described_class.new(user).call
         expect(user.reload.streak_count).to eq(1)
       end
     end
@@ -122,7 +122,7 @@ RSpec.describe StreakCalculator, type: :service do
         # 後から契約を abandon
         pact.update!(status: :abandoned)
 
-        described_class.new(user).recalculate!
+        described_class.new(user).call
         expect(user.reload.streak_count).to eq(2)
       end
     end
@@ -135,7 +135,7 @@ RSpec.describe StreakCalculator, type: :service do
         add_check_in(pact: pact, on: Date.current - 1, status: :kept)
         add_check_in(pact: pact, on: Date.current,     status: :kept)
 
-        described_class.new(user).recalculate!
+        described_class.new(user).call
         expect(user.reload.longest_streak).to eq(3)
       end
 
@@ -144,7 +144,7 @@ RSpec.describe StreakCalculator, type: :service do
         pact = create(:pact, user: user, signed_at: 7.days.ago)
         add_check_in(pact: pact, on: Date.current, status: :kept)
 
-        described_class.new(user).recalculate!
+        described_class.new(user).call
         expect(user.reload.longest_streak).to eq(10)
       end
     end
@@ -156,7 +156,7 @@ RSpec.describe StreakCalculator, type: :service do
         add_check_in(pact: other_pact, on: Date.current, status: :kept)
 
         # 自分は何も check_in していない
-        described_class.new(user).recalculate!
+        described_class.new(user).call
         expect(user.reload.streak_count).to eq(0)
       end
     end
