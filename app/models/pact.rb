@@ -1,8 +1,6 @@
 class Pact < ApplicationRecord
-  # MVP に含めない関連（v1.1 で実装）
-  # has_many :check_ins, dependent: :destroy
-  # has_one :crest, dependent: :destroy
-  # has_many :ai_generations, dependent: :nullify
+  # has_one :crest / has_many :ai_generations は v1.1 (#13, #14) で実装予定
+  has_many :check_ins, dependent: :destroy
 
   belongs_to :user
 

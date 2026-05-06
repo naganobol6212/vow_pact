@@ -10,9 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_03_140911) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_05_120723) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "check_ins", force: :cascade do |t|
+    t.date "checked_on", null: false
+    t.datetime "created_at", null: false
+    t.text "note"
+    t.bigint "pact_id", null: false
+    t.integer "status", null: false
+    t.datetime "updated_at", null: false
+    t.index ["checked_on"], name: "index_check_ins_on_checked_on"
+    t.index ["pact_id", "checked_on"], name: "index_check_ins_on_pact_id_and_checked_on", unique: true
+    t.index ["pact_id"], name: "index_check_ins_on_pact_id"
+  end
 
   create_table "pacts", force: :cascade do |t|
     t.datetime "completed_at"
@@ -55,6 +67,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_03_140911) do
     t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true
   end
 
+  add_foreign_key "check_ins", "pacts"
   add_foreign_key "pacts", "users"
   add_foreign_key "sessions", "users"
 end
