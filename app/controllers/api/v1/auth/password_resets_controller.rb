@@ -7,7 +7,7 @@ module Api
       # - PATCH  /api/v1/auth/password_resets/:token  ：新パスワードを設定
       #
       # セキュリティ:
-      # - user enumeration 防止：存在しない email でも 200 OK を返す
+      # - user enumeration 防止：存在しない email でも 202 Accepted を返す
       # - トークン：urlsafe_base64(32)、有効期限 30 分、一回限り使用
       # - レート制限：1 ユーザー 1 時間 5 回まで
       class PasswordResetsController < Api::V1::BaseController
@@ -40,7 +40,8 @@ module Api
           token = PasswordResetToken.find_by(token: params[:token])
           unless token && !token.expired? && !token.used?
             render json: {
-              errors: [ { code: "invalid_or_expired_token", message: "リンクが無効または期限切れです" } ]
+              errors: [ { code: "invalid_or_expired_token", field: "token",
+                          message: "リンクが無効または期限切れです" } ]
             }, status: :not_found
             return
           end
@@ -53,7 +54,8 @@ module Api
           token = PasswordResetToken.find_by(token: params[:token])
           unless token
             render json: {
-              errors: [ { code: "invalid_or_expired_token", message: "リンクが無効です" } ]
+              errors: [ { code: "invalid_or_expired_token", field: "token",
+                          message: "リンクが無効です" } ]
             }, status: :not_found
             return
           end
@@ -65,7 +67,7 @@ module Api
           head :no_content
         rescue ArgumentError => e
           render json: {
-            errors: [ { code: "invalid_or_expired_token", message: e.message } ]
+            errors: [ { code: "invalid_or_expired_token", field: "token", message: e.message } ]
           }, status: :unprocessable_entity
         end
 
