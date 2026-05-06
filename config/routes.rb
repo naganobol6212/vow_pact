@@ -14,6 +14,10 @@ Rails.application.routes.draw do
         patch  "me",       to: "users#update"
         patch  "email",    to: "users#update_email"
         patch  "password", to: "passwords#update"
+        # ゲストモード（お試し用）
+        post   "guest",    to: "guests#create"
+        # ゲスト → 本登録ユーザーへの昇格（既存データを引き継ぐ）
+        patch  "promote",  to: "promotions#update"
       end
 
       resources :pacts, only: [ :index, :create, :show, :update, :destroy ] do
