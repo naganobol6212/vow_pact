@@ -48,6 +48,12 @@ function Layout({ children, title, showHeader = true, showFooter = true }: Layou
                     <Link to="/crests" className="text-ink/70 hover:text-seal transition">
                       殿堂
                     </Link>
+                    <Link to="/rankings" className="text-ink/70 hover:text-seal transition">
+                      番付
+                    </Link>
+                    <Link to="/settings" className="text-ink/70 hover:text-seal transition">
+                      設定
+                    </Link>
                   </nav>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-ink/70 hidden sm:inline">
