@@ -26,7 +26,9 @@ module Api
         private
 
         def profile_params
-          params.permit(:nickname, :avatar_url, :is_public)
+          # avatar は ActionDispatch::Http::UploadedFile（multipart/form-data）。
+          # 同時に avatar_url（外部 URL）も維持する。
+          params.permit(:nickname, :avatar_url, :is_public, :avatar)
         end
       end
     end

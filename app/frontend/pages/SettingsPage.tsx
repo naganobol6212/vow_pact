@@ -1,11 +1,12 @@
 import { useState } from "react"
+import type { ChangeEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import Layout from "../components/Layout"
 import Button from "../components/Button"
 import FormField from "../components/FormField"
 import { useAuth } from "../hooks/useAuth"
-import { api, ApiError } from "../lib/api"
+import { api, apiFormData, ApiError } from "../lib/api"
 import type { User } from "../types/user"
 
 function SettingsPage() {
@@ -181,24 +182,39 @@ function PromoteSection() {
 function ProfileSection({ user }: { user: User }) {
   const queryClient = useQueryClient()
   const [nickname, setNickname] = useState(user.nickname)
-  const [avatarUrl, setAvatarUrl] = useState(user.avatar_url ?? "")
   const [isPublic, setIsPublic] = useState(user.is_public)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [savedRecently, setSavedRecently] = useState(false)
 
+  const currentAvatar = avatarPreview ?? user.avatar_image_url ?? user.avatar_url ?? null
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null
+    setAvatarFile(file)
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = () => setAvatarPreview(typeof reader.result === "string" ? reader.result : null)
+      reader.readAsDataURL(file)
+    } else {
+      setAvatarPreview(null)
+    }
+  }
+
   const updateMutation = useMutation<User, ApiError, void>({
-    mutationFn: () =>
-      api<User>("/auth/me", {
-        method: "PATCH",
-        body: {
-          nickname,
-          avatar_url: avatarUrl.trim() || null,
-          is_public: isPublic,
-        },
-      }),
+    mutationFn: () => {
+      const fd = new FormData()
+      fd.append("nickname", nickname)
+      fd.append("is_public", String(isPublic))
+      if (avatarFile) fd.append("avatar", avatarFile)
+      return apiFormData<User>("/auth/me", { method: "PATCH", body: fd })
+    },
     onSuccess: async () => {
       setErrors({})
       setSavedRecently(true)
+      setAvatarFile(null)
+      setAvatarPreview(null)
       setTimeout(() => setSavedRecently(false), 3000)
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] })
     },
@@ -215,7 +231,7 @@ function ProfileSection({ user }: { user: User }) {
   })
 
   return (
-    <section className="p-5 bg-parchment/60 border border-gold/40 rounded-sm">
+    <section className="p-5 bg-parchment/60 border border-gold/40 rounded-xl shadow-sm">
       <h3 className="font-serif text-base text-ink mb-3">プロフィール</h3>
       <form
         onSubmit={(e) => {
@@ -223,6 +239,40 @@ function ProfileSection({ user }: { user: User }) {
           updateMutation.mutate()
         }}
       >
+        {/* アバター画像 */}
+        <div className="mb-4">
+          <p className="block mb-2 font-serif text-sm text-ink/80">アバター画像</p>
+          <div className="flex items-center gap-4">
+            <div className="w-20 h-20 rounded-full bg-parchment border-2 border-gold/40 flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+              {currentAvatar ? (
+                <img src={currentAvatar} alt="avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-3xl">👤</span>
+              )}
+            </div>
+            <div className="flex-1">
+              <label className="inline-block cursor-pointer">
+                <span className="px-4 py-2 text-sm bg-gold text-ink rounded-lg shadow hover:shadow-md transition inline-block">
+                  画像を選択
+                </span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
+              <p className="text-xs text-ink/50 mt-1">PNG / JPEG / WebP / GIF（2MB まで）</p>
+              {avatarFile && (
+                <p className="text-xs text-seal mt-1">{avatarFile.name} を選択中（保存で反映）</p>
+              )}
+              {errors.avatar && (
+                <p className="text-xs text-seal mt-1">{errors.avatar}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
         <FormField
           label="ニックネーム"
           type="text"
@@ -230,14 +280,6 @@ function ProfileSection({ user }: { user: User }) {
           onChange={(e) => setNickname(e.target.value)}
           error={errors.nickname}
           required
-        />
-        <FormField
-          label="アバター URL（任意）"
-          type="url"
-          value={avatarUrl}
-          onChange={(e) => setAvatarUrl(e.target.value)}
-          error={errors.avatar_url}
-          placeholder="https://..."
         />
         <label className="flex items-center gap-2 mb-4 cursor-pointer">
           <input
