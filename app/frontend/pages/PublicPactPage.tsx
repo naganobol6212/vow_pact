@@ -33,6 +33,15 @@ function PublicPactPage() {
     enabled: !!id,
   })
 
+  // OG image を先取りフェッチして Rails.cache を温める。
+  // 初回ユーザー閲覧時に生成しておけば、X クローラーが投稿後にアクセスしたとき cache hit する。
+  useEffect(() => {
+    if (!id) return
+    const ctrl = new AbortController()
+    fetch(`/api/v1/public/pacts/${id}/og.png`, { signal: ctrl.signal }).catch(() => {})
+    return () => ctrl.abort()
+  }, [id])
+
   // OGP / Twitter Card 用のメタタグを動的に注入
   useEffect(() => {
     if (!pact) return

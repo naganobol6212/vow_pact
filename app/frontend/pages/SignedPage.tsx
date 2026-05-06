@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { motion } from "framer-motion"
@@ -46,6 +47,17 @@ function SignedPage() {
       queryClient.invalidateQueries({ queryKey: ["pacts"] })
     },
   })
+
+  // OG image PNG を先取りフェッチして Rails.cache（Solid Cache）を温める。
+  // Render Free tier では初回生成に 10 秒以上かかるため、ユーザーが SignedPage を見ている間に
+  // 裏で生成完了させておく。シェアボタン押下後に X クローラーが来たときには cache hit するので
+  // 即座に PNG を返せる。失敗しても X 投稿フローには影響させない。
+  useEffect(() => {
+    if (!id) return
+    const ctrl = new AbortController()
+    fetch(`/api/v1/public/pacts/${id}/og.png`, { signal: ctrl.signal }).catch(() => {})
+    return () => ctrl.abort()
+  }, [id])
 
   if (isLoading) {
     return (
