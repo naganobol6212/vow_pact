@@ -104,5 +104,17 @@ RSpec.describe PactCompleter, type: :service do
       expect(service).to receive(:enqueue_crest_generation_later)
       service.call
     end
+
+    it "completable な場合に CrestGenerator が呼ばれて Crest が DB に生成される" do
+      pact = build_pact(signed_at: 1.day.ago.beginning_of_day, deadline: Time.zone.today)
+      add_kept(pact: pact, on: Time.zone.today)
+
+      expect {
+        described_class.new(pact).call
+      }.to change(Crest, :count).by(1)
+
+      expect(pact.reload.crest).to be_present
+      expect(pact.crest.pact_id).to eq(pact.id)
+    end
   end
 end

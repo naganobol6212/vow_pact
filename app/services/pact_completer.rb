@@ -38,8 +38,10 @@ class PactCompleter
     kept_days.positive? && kept_days.to_f / expected_days >= COMPLIANCE_THRESHOLD
   end
 
-  # Crest 生成は v1.1 #13 で実装。ここは hook ポイントだけ用意する。
+  # 達成した契約に紋章を付与する。
+  # MVP は同期生成（CrestGenerator は完全に Ruby 内処理で外部依存なし）。
+  # 将来 OpenAI で画像生成等を組み込む場合は Solid Queue にジョブ化する想定。
   def enqueue_crest_generation_later
-    # noop（v1.1 #13 で実装）
+    CrestGenerator.new(@pact).call
   end
 end

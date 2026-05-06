@@ -1,6 +1,6 @@
 class Pact < ApplicationRecord
-  # has_one :crest は v1.1 (#13) で実装予定
   has_many :check_ins, dependent: :destroy
+  has_one :crest, dependent: :destroy
   # AI ログは契約削除時に nullify（履歴・コスト分析用に残す）
   has_many :ai_generations, dependent: :nullify
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_06_040745) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_06_045953) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -43,6 +43,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_06_040745) do
     t.index ["checked_on"], name: "index_check_ins_on_checked_on"
     t.index ["pact_id", "checked_on"], name: "index_check_ins_on_pact_id_and_checked_on", unique: true
     t.index ["pact_id"], name: "index_check_ins_on_pact_id"
+  end
+
+  create_table "crests", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "crest_data", default: {}, null: false
+    t.datetime "generated_at", null: false
+    t.bigint "pact_id", null: false
+    t.integer "rarity", null: false
+    t.datetime "updated_at", null: false
+    t.index ["pact_id"], name: "index_crests_on_pact_id", unique: true
+    t.index ["rarity"], name: "index_crests_on_rarity"
   end
 
   create_table "pacts", force: :cascade do |t|
@@ -89,6 +100,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_06_040745) do
   add_foreign_key "ai_generations", "pacts"
   add_foreign_key "ai_generations", "users"
   add_foreign_key "check_ins", "pacts"
+  add_foreign_key "crests", "pacts"
   add_foreign_key "pacts", "users"
   add_foreign_key "sessions", "users"
 end
