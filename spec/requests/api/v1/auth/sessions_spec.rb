@@ -82,10 +82,12 @@ RSpec.describe "Api::V1::Auth::Sessions", type: :request do
     end
 
     context "未ログインの場合" do
-      it "401 Unauthorized を返す" do
+      it "204 No Content を返す（idempotent ログアウト）" do
+        # 未ログインで叩いても 401 にせず 204 を返すことで、二重押し / セッション期限切れ後でも
+        # クライアントは安全に「ログアウト済み状態」へ遷移できる。
         delete "/api/v1/auth/logout", as: :json
 
-        expect(response).to have_http_status(:unauthorized)
+        expect(response).to have_http_status(:no_content)
       end
     end
   end
