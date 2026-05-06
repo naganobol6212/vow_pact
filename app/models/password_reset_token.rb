@@ -31,8 +31,8 @@ class PasswordResetToken < ApplicationRecord
   def consume!(password:, password_confirmation:)
     with_lock do
       # ロック取得後に最新の DB 値で再判定する（reload は with_lock が暗黙に行う）
-      raise ArgumentError, "既に使用済みのトークンです" if used?
-      raise ArgumentError, "期限切れのトークンです" if expired?
+      raise ArgumentError, I18n.t("errors.api.already_used_token") if used?
+      raise ArgumentError, I18n.t("errors.api.expired_token") if expired?
 
       user.update!(password: password, password_confirmation: password_confirmation)
       update!(used_at: Time.current)
