@@ -7,8 +7,11 @@ module Api
       # 「今月 completed になった pact 数」のランキング。
       # is_public = true のユーザーのみ一覧表示、自分は private でも my_rank を返す。
       def monthly
-        month_start = Time.zone.today.beginning_of_month
-        month_end   = Time.zone.today.end_of_month
+        # Date#end_of_month は 00:00:00 として解釈されるため、月末当日の datetime レコードが
+        # ほぼ取得できない。Time.zone.now を使って TimeWithZone（23:59:59.999...）にする。
+        now         = Time.zone.now
+        month_start = now.beginning_of_month
+        month_end   = now.end_of_month
 
         # ユーザーごとの completed 数を算出
         scores = Pact.completed
@@ -29,20 +32,26 @@ module Api
       # GET /api/v1/rankings/streak
       # users.streak_count による連続日数ランキング。
       def streak
-        public_users = User.where(is_public: true).order(streak_count: :desc, updated_at: :asc, id: :asc)
+        # streak_count = 0 のユーザーは除外（圏外なので一覧に出さない）。
+        public_users = User.where(is_public: true)
+                           .where("streak_count > 0")
+                           .order(streak_count: :desc, updated_at: :asc, id: :asc)
+                           # TOP_LIMIT 件 + α を取れば、同点タイ用に余裕を持って取れる。
+                           .limit(TOP_LIMIT * 2)
 
         rankings = []
         last_score = nil
         last_rank = 0
         public_users.each_with_index do |u, idx|
-          rank = (u.streak_count == last_score) ? last_rank : idx + 1
-          last_score = u.streak_count
-          last_rank = rank
+          # 直前のスコアと比較する（last_score を更新する前に）
+          # TOP_LIMIT 件に達していて、かつスコアが変わったら終了。
+          # 同点タイは TOP_LIMIT を超えても全員含める。
           break if rankings.size >= TOP_LIMIT && u.streak_count != last_score
 
-          if rankings.size < TOP_LIMIT
-            rankings << { rank: rank, user: user_summary(u), streak_count: u.streak_count }
-          end
+          rank = (u.streak_count == last_score) ? last_rank : idx + 1
+          last_score = u.streak_count
+          last_rank  = rank
+          rankings << { rank: rank, user: user_summary(u), streak_count: u.streak_count }
         end
 
         my_rank = build_streak_my_rank
@@ -62,10 +71,12 @@ module Api
         last_score = nil
         last_rank = 0
         sorted.each_with_index do |(u, count), idx|
+          # 同点タイは TOP_LIMIT を超えても全員含める（streak と挙動を揃える）。
+          break if rankings.size >= TOP_LIMIT && count != last_score
+
           rank = (count == last_score) ? last_rank : idx + 1
           last_score = count
           last_rank = rank
-          break if rankings.size >= TOP_LIMIT
           rankings << { rank: rank, user: user_summary(u), achievement_count: count }
         end
         rankings
