@@ -7,6 +7,9 @@ import CreatePactStep2Page from "./pages/CreatePactStep2Page"
 import CreatePactStep3Page from "./pages/CreatePactStep3Page"
 import CreatePactStep4Page from "./pages/CreatePactStep4Page"
 import SignedPage from "./pages/SignedPage"
+import PactsListPage from "./pages/PactsListPage"
+import PactDetailPage from "./pages/PactDetailPage"
+import CrestsGalleryPage from "./pages/CrestsGalleryPage"
 import RequireAuth from "./components/RequireAuth"
 import { CreatePactProvider } from "./contexts/CreatePactContext"
 
@@ -47,6 +50,36 @@ function App() {
             element={
               <RequireAuth>
                 <SignedPage />
+              </RequireAuth>
+            }
+          />
+
+          {/* 契約一覧 */}
+          <Route
+            path="/pacts"
+            element={
+              <RequireAuth>
+                <PactsListPage />
+              </RequireAuth>
+            }
+          />
+
+          {/* 契約詳細 + チェックイン UI */}
+          <Route
+            path="/pacts/:id"
+            element={
+              <RequireAuth>
+                <PactDetailPage />
+              </RequireAuth>
+            }
+          />
+
+          {/* 紋章ギャラリー（誓約の殿堂） */}
+          <Route
+            path="/crests"
+            element={
+              <RequireAuth>
+                <CrestsGalleryPage />
               </RequireAuth>
             }
           />
