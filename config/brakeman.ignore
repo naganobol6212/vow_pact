@@ -1,0 +1,52 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Command Injection",
+      "warning_code": 14,
+      "fingerprint": "2690fddcc003157286a8eb555440f915a327b3499d2e8ac78305e2d36f0834fc",
+      "check_name": "Execute",
+      "message": "Possible command injection",
+      "file": "app/services/pact_og_image_generator.rb",
+      "line": 136,
+      "link": "https://brakemanscanner.org/docs/warning_types/command_injection/",
+      "code": "Open3.capture3(*[\"rsvg-convert\", \"--width=#{Integer(RENDER_WIDTH)}\", \"--height=#{Integer(RENDER_HEIGHT)}\", \"--format=png\"], :stdin_data => to_svg, :binmode => true)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "PactOgImageGenerator",
+        "method": "png_via_rsvg"
+      },
+      "user_input": "Integer(RENDER_WIDTH)",
+      "confidence": "Medium",
+      "cwe_id": [
+        77
+      ],
+      "note": "RENDER_WIDTH / RENDER_HEIGHT はクラス内で定義された Integer 定数（WIDTH * 2 / HEIGHT * 2）であり、ユーザー入力ではない。Open3.capture3 は配列形式のためシェル展開もされず、command injection は不可能。Brakeman の Execute チェックは式展開を一律警告するための false positive として無視する。"
+    },
+    {
+      "warning_type": "Command Injection",
+      "warning_code": 14,
+      "fingerprint": "fcb96f33be7b22a6542ae0739f3be9ebc2bda2808daf4e29d79ce49287b42c09",
+      "check_name": "Execute",
+      "message": "Possible command injection",
+      "file": "app/services/pact_og_image_generator.rb",
+      "line": 147,
+      "link": "https://brakemanscanner.org/docs/warning_types/command_injection/",
+      "code": "Open3.capture3(*[\"convert\", \"-background\", \"transparent\", \"-density\", \"200\", \"svg:-\", \"-resize\", \"#{Integer(RENDER_WIDTH)}x#{Integer(RENDER_HEIGHT)}\", \"png:-\"], :stdin_data => to_svg, :binmode => true)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "PactOgImageGenerator",
+        "method": "png_via_imagemagick"
+      },
+      "user_input": "Integer(RENDER_WIDTH)",
+      "confidence": "Medium",
+      "cwe_id": [
+        77
+      ],
+      "note": "RENDER_WIDTH / RENDER_HEIGHT はクラス内で定義された Integer 定数（WIDTH * 2 / HEIGHT * 2）であり、ユーザー入力ではない。Open3.capture3 は配列形式のためシェル展開もされず、command injection は不可能。Brakeman の Execute チェックは式展開を一律警告するための false positive として無視する。"
+    }
+  ],
+  "updated": "2026-05-06 13:30:00 +0000",
+  "brakeman_version": "8.0.4"
+}

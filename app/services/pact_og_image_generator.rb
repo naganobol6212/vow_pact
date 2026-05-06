@@ -126,8 +126,13 @@ class PactOgImageGenerator
     @imagemagick_available ||= system("which convert > /dev/null 2>&1")
   end
 
+  # Open3.capture3 は配列形式で渡すためシェル展開はされない。
+  # 引数の補完値（RENDER_WIDTH/HEIGHT）は Integer 定数で攻撃面はないが、
+  # Brakeman の Execute チェックは式展開を一律警告するため、Integer() で型を明示する。
   def png_via_rsvg
-    cmd = [ "rsvg-convert", "--width=#{RENDER_WIDTH}", "--height=#{RENDER_HEIGHT}", "--format=png" ]
+    width  = Integer(RENDER_WIDTH)
+    height = Integer(RENDER_HEIGHT)
+    cmd = [ "rsvg-convert", "--width=#{width}", "--height=#{height}", "--format=png" ]
     out, err, status = Open3.capture3(*cmd, stdin_data: to_svg, binmode: true)
     return out if status.success?
     Rails.logger.error("[PactOgImage] rsvg-convert failed: #{err}")
@@ -135,8 +140,10 @@ class PactOgImageGenerator
   end
 
   def png_via_imagemagick
+    width  = Integer(RENDER_WIDTH)
+    height = Integer(RENDER_HEIGHT)
     cmd = [ "convert", "-background", "transparent", "-density", "200",
-            "svg:-", "-resize", "#{RENDER_WIDTH}x#{RENDER_HEIGHT}", "png:-" ]
+            "svg:-", "-resize", "#{width}x#{height}", "png:-" ]
     out, err, status = Open3.capture3(*cmd, stdin_data: to_svg, binmode: true)
     return out if status.success?
     Rails.logger.error("[PactOgImage] convert failed: #{err}")
