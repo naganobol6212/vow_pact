@@ -14,6 +14,8 @@ import RankingsPage from "./pages/RankingsPage"
 import SettingsPage from "./pages/SettingsPage"
 import ForgotPasswordPage from "./pages/ForgotPasswordPage"
 import ResetPasswordPage from "./pages/ResetPasswordPage"
+import HowItWorksPage from "./pages/HowItWorksPage"
+import PublicPactPage from "./pages/PublicPactPage"
 import RequireAuth from "./components/RequireAuth"
 import { CreatePactProvider } from "./contexts/CreatePactContext"
 
@@ -27,6 +29,12 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/signup" element={<AuthPage />} />
+
+          {/* 使い方（誰でも閲覧可） */}
+          <Route path="/how-it-works" element={<HowItWorksPage />} />
+
+          {/* 公開された契約（認証不要、is_public=true のみ閲覧可） */}
+          <Route path="/p/:id" element={<PublicPactPage />} />
 
           {/* パスワード再設定（未ログインで叩く） */}
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

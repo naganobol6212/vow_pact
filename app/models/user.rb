@@ -45,6 +45,11 @@ class User < ApplicationRecord
   has_many :ai_generations, dependent: :destroy
   has_many :password_reset_tokens, dependent: :destroy
 
+  # アバター画像（Active Storage）。avatar_url（外部 URL）と共存可能：
+  # FE 側は avatar.attached? なら avatar_image_url、なければ avatar_url を使う。
+  has_one_attached :avatar
+  validate :avatar_validations
+
   # バリデーション
   validates :email,
             presence: true,
@@ -78,5 +83,19 @@ class User < ApplicationRecord
 
   def strip_nickname
     self.nickname = nickname.strip if nickname.present?
+  end
+
+  AVATAR_MAX_BYTES = 2.megabytes
+  AVATAR_CONTENT_TYPES = %w[image/png image/jpeg image/webp image/gif].freeze
+
+  def avatar_validations
+    return unless avatar.attached?
+
+    if avatar.byte_size > AVATAR_MAX_BYTES
+      errors.add(:avatar, "は #{AVATAR_MAX_BYTES / 1.megabyte}MB 以下にしてください")
+    end
+    unless AVATAR_CONTENT_TYPES.include?(avatar.content_type)
+      errors.add(:avatar, "は PNG / JPEG / WebP / GIF 形式のみ対応しています")
+    end
   end
 end

@@ -32,10 +32,10 @@ function PactsListPage() {
   const filtered = pacts?.filter((p) => filter === "all" || p.status === filter) ?? []
 
   return (
-    <Layout title="誓約の書庫">
+    <Layout title="契約一覧">
       <div className="max-w-3xl mx-auto">
         <div className="mb-6 text-center">
-          <p className="font-serif text-xl text-seal mb-2">誓約の書庫</p>
+          <p className="font-serif text-2xl text-seal mb-2">契約一覧</p>
           <p className="text-sm text-ink/60">これまでに結んだすべての契約</p>
         </div>
 

@@ -119,14 +119,14 @@ function PactDetailPage() {
           </div>
 
           <section className="mb-3">
-            <p className="text-xs text-ink/60 font-serif">試練</p>
+            <p className="text-xs text-ink/60 font-serif">制約</p>
             <p className="text-sm text-ink">{pact.constraint_text}</p>
           </section>
           <section className="mb-3">
             <p className="text-xs text-ink/60 font-serif">期日</p>
             <p className="text-sm text-ink">{pact.deadline}</p>
           </section>
-          <section>
+          <section className="mb-3">
             <p className="text-xs text-ink/60 font-serif">難易度</p>
             <p className="text-sm text-ink">
               {"⚔".repeat(difficulty)}
@@ -134,6 +134,9 @@ function PactDetailPage() {
               <span className="ml-2">{pact.difficulty} / 5</span>
             </p>
           </section>
+
+          {/* 公開設定 */}
+          <PublicToggle pact={pact} />
         </div>
 
         {/* 今日のチェックイン */}
@@ -215,11 +218,97 @@ function PactDetailPage() {
 
         <div className="flex justify-between">
           <Button variant="ghost" onClick={() => navigate("/pacts")}>
-            書庫へ戻る
+            契約一覧へ戻る
           </Button>
         </div>
       </div>
     </Layout>
+  )
+}
+
+// =====================================================================
+// 公開/非公開トグル + 公開 URL コピー
+// =====================================================================
+
+function PublicToggle({ pact }: { pact: Pact }) {
+  const queryClient = useQueryClient()
+  const [copied, setCopied] = useState(false)
+
+  const toggleMutation = useMutation<Pact, ApiError, boolean>({
+    mutationFn: (next) =>
+      api<Pact>(`/pacts/${pact.id}`, {
+        method: "PATCH",
+        body: { is_public: next },
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["pact", String(pact.id)] })
+      await queryClient.invalidateQueries({ queryKey: ["pacts"] })
+    },
+  })
+
+  const publicUrl = `${window.location.origin}/p/${pact.id}`
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(publicUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // クリップボード失敗は無視（フォールバックなし、URL は表示されている）
+    }
+  }
+
+  return (
+    <section className="mt-4 pt-4 border-t border-gold/30">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm text-ink font-bold">公開設定</p>
+          <p className="text-xs text-ink/60">
+            {pact.is_public
+              ? "URL を知っている誰でも閲覧できます"
+              : "あなただけが閲覧できます"}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={pact.is_public}
+          onClick={() => toggleMutation.mutate(!pact.is_public)}
+          disabled={toggleMutation.isPending}
+          className={`relative w-12 h-6 rounded-full transition shrink-0 ${
+            pact.is_public ? "bg-seal" : "bg-ink/30"
+          } disabled:opacity-50`}
+        >
+          <span
+            className={`absolute top-0.5 w-5 h-5 rounded-full bg-parchment shadow transition-transform ${
+              pact.is_public ? "translate-x-6" : "translate-x-0.5"
+            }`}
+          />
+        </button>
+      </div>
+
+      {pact.is_public && (
+        <div className="mt-3 p-3 bg-gold/10 border border-gold/40 rounded-lg">
+          <p className="text-xs text-ink/70 mb-2">公開 URL：</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={publicUrl}
+              readOnly
+              className="flex-1 px-2 py-1 text-xs bg-parchment border border-ink/20 rounded font-mono"
+              onFocus={(e) => e.target.select()}
+            />
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="px-3 py-1 text-xs bg-seal text-parchment rounded hover:opacity-90 transition shrink-0"
+            >
+              {copied ? "✓ コピー済み" : "コピー"}
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   )
 }
 

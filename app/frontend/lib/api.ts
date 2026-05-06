@@ -52,3 +52,36 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
   return (await response.json()) as T
 }
+
+/**
+ * multipart/form-data でファイル送信する API ラッパー。
+ * `Content-Type` は fetch に任せる（boundary 自動付与のため指定しない）。
+ */
+export async function apiFormData<T>(
+  path: string,
+  options: { method?: "POST" | "PATCH" | "PUT"; body: FormData }
+): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: options.method ?? "PATCH",
+    credentials: "include",
+    headers: {
+      Accept: "application/json",
+      "X-CSRF-Token": getCsrfToken(),
+    },
+    body: options.body,
+  })
+
+  if (!response.ok) {
+    let errors: unknown = null
+    try {
+      const data = await response.json()
+      errors = data.errors
+    } catch {
+      errors = null
+    }
+    throw new ApiError(response.status, errors)
+  }
+
+  if (response.status === 204) return undefined as T
+  return (await response.json()) as T
+}
