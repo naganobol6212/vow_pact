@@ -6,6 +6,7 @@ class UserSerializer
              :nickname,
              :avatar_url,
              :is_public,
+             :is_guest,
              :streak_count,
              :longest_streak,
              :created_at,
