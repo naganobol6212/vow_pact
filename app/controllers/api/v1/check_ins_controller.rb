@@ -3,6 +3,10 @@ module Api
     class CheckInsController < Api::V1::BaseController
       before_action :set_pact
 
+      # 不正な enum 値（"invalid_status" など）が渡されると Rails は ArgumentError を
+      # 投げて 500 で落ちるため、422 に変換してクライアント側でハンドルできるようにする。
+      rescue_from ArgumentError, with: :render_invalid_argument
+
       # GET /api/v1/pacts/:pact_id/check_ins?month=YYYY-MM
       # month を渡された場合は当該月のみ、未指定なら全件返す（カレンダー UI 用）。
       def index
@@ -17,8 +21,9 @@ module Api
       # POST /api/v1/pacts/:pact_id/check_ins
       def create
         # checked_on / pact_id はクライアント受付不可（チート防止）
+        attrs = check_in_params
         check_in, created = ApplicationRecord.transaction do
-          ci, c = CheckIns::Upsert.call(pact: @pact, status: params[:status], note: params[:note])
+          ci, c = CheckIns::Upsert.call(pact: @pact, status: attrs[:status], note: attrs[:note])
           PactCompleter.new(@pact).call
           [ ci, c ]
         end
@@ -47,6 +52,18 @@ module Api
 
       def set_pact
         @pact = Current.user.pacts.find(params[:pact_id])
+      end
+
+      # クライアントから受け取れるのは status / note のみ。
+      # checked_on / pact_id はサーバ側で確定する（チート防止）。
+      def check_in_params
+        params.permit(:status, :note)
+      end
+
+      def render_invalid_argument(exception)
+        render json: {
+          errors: [ { code: "invalid_argument", field: "status", message: exception.message } ]
+        }, status: :unprocessable_entity
       end
 
       # "2026-05" 形式 → Date 範囲。形式不正なら今月にフォールバック。
