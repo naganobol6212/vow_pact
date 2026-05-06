@@ -38,10 +38,10 @@ module Api
         params.permit(:goal, :constraint_text, :difficulty, :difficulty_reason, :deadline)
       end
 
-      # 編集可能な属性は goal / constraint_text のみ
+      # 編集可能な属性は goal / constraint_text / is_public
       # deadline / difficulty / signed_at は契約時に確定し、後から変更不可
       def edit_params
-        params.permit(:goal, :constraint_text)
+        params.permit(:goal, :constraint_text, :is_public)
       end
     end
   end

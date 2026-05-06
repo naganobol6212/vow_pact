@@ -44,6 +44,12 @@ Rails.application.routes.draw do
       # ランキング
       get "rankings/monthly", to: "rankings#monthly"
       get "rankings/streak",  to: "rankings#streak"
+
+      # 公開エンドポイント（認証不要、is_public=true の契約のみ）
+      namespace :public do
+        get "pacts/:id",        to: "pacts#show",     as: :pact
+        get "pacts/:id/og.png", to: "og_images#show", as: :pact_og_image
+      end
     end
   end
 

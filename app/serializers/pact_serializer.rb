@@ -12,6 +12,7 @@ class PactSerializer
              :title,
              :signed_at,
              :completed_at,
+             :is_public,
              :created_at,
              :updated_at
 

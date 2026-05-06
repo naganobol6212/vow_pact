@@ -32,6 +32,8 @@ export type Pact = {
   title: string | null
   signed_at: string
   completed_at: string | null
+  /** この契約を公開するか。true なら /p/:id から認証なしで閲覧可能。 */
+  is_public: boolean
   crest: Crest | null
   created_at: string
   updated_at: string
