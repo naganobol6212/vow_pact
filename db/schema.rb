@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_06_055554) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_06_064749) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -75,6 +75,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_06_055554) do
     t.index ["user_id"], name: "index_pacts_on_user_id"
   end
 
+  create_table "password_reset_tokens", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "token", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "used_at"
+    t.bigint "user_id", null: false
+    t.index ["token"], name: "index_password_reset_tokens_on_token", unique: true
+    t.index ["user_id", "created_at"], name: "index_password_reset_tokens_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_password_reset_tokens_on_user_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -104,5 +116,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_06_055554) do
   add_foreign_key "check_ins", "pacts"
   add_foreign_key "crests", "pacts"
   add_foreign_key "pacts", "users"
+  add_foreign_key "password_reset_tokens", "users"
   add_foreign_key "sessions", "users"
 end

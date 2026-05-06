@@ -43,6 +43,7 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :check_ins, through: :pacts
   has_many :ai_generations, dependent: :destroy
+  has_many :password_reset_tokens, dependent: :destroy
 
   # バリデーション
   validates :email,
