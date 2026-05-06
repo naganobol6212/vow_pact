@@ -16,7 +16,10 @@ Rails.application.routes.draw do
         patch  "password", to: "passwords#update"
       end
 
-      resources :pacts, only: [ :index, :create, :show, :update, :destroy ]
+      resources :pacts, only: [ :index, :create, :show, :update, :destroy ] do
+        # ネストしたチェックイン（必ず特定 pact 配下）
+        resources :check_ins, only: [ :index, :create, :destroy ]
+      end
 
       namespace :ai do
         post "goals",        to: "goals#create"
@@ -24,6 +27,10 @@ Rails.application.routes.draw do
         post "difficulties", to: "difficulties#create"
         post "titles",       to: "titles#create"
       end
+
+      # ランキング
+      get "rankings/monthly", to: "rankings#monthly"
+      get "rankings/streak",  to: "rankings#streak"
     end
   end
 
