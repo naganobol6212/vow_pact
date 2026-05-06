@@ -24,9 +24,12 @@ RSpec.describe CheckIn, type: :model do
     end
 
     it "checked_on が必須" do
-      ci = build(:check_in, pact: pact, checked_on: nil)
-      expect(ci).not_to be_valid
-      expect(ci.errors[:checked_on]).to be_present
+      # before_validation で自動補完される前段で検証するため、save 経路ではなく
+      # 明示的に valid? を skip した状態で nil をセット → save で空のまま落とす
+      ci = build(:check_in, pact: pact)
+      ci.checked_on = nil
+      ci.valid?  # before_validation で Date.current が入る → 必須は満たされる
+      expect(ci.checked_on).to eq(Date.current)
     end
 
     it "checked_on が未来の日付なら invalid" do
@@ -67,6 +70,22 @@ RSpec.describe CheckIn, type: :model do
       ci = build(:check_in, pact: pact, checked_on: Date.current)
       expect(ci).not_to be_valid
       expect(ci.errors[:pact]).to be_present
+    end
+  end
+
+  describe "checked_on のサーバ側自動設定（チート防止）" do
+    let(:user) { create(:user) }
+    let(:pact) { create(:pact, user: user, signed_at: 3.days.ago) }
+
+    it "checked_on を未指定で create すると自動で Date.current が入る" do
+      ci = pact.check_ins.create!(status: :kept)
+      expect(ci.checked_on).to eq(Date.current)
+    end
+
+    it "明示指定時は尊重される（内部呼び出し / 訂正 / テスト用途）" do
+      past = pact.signed_at.to_date + 1
+      ci = pact.check_ins.create!(checked_on: past, status: :kept)
+      expect(ci.checked_on).to eq(past)
     end
   end
 
