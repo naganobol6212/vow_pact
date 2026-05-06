@@ -60,6 +60,9 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+
+  # 開発中の送信メールをブラウザで確認できる UI（http://localhost:3000/letter_opener）
+  gem "letter_opener_web"
 end
 
 gem "vite_rails", "~> 3.10"
