@@ -39,6 +39,78 @@ RSpec.describe "Api::V1::Ai::Goals", type: :request do
           "週3回運動する"
         ])
       end
+
+      it "ai_generations に success ログが記録される" do
+        expect {
+          post "/api/v1/ai/goals", params: { theme: "健康" }, as: :json
+        }.to change(AiGeneration, :count).by(1)
+
+        ai = AiGeneration.last
+        expect(ai.user).to eq(user)
+        expect(ai.generation_type).to eq("goal_suggestion")
+        expect(ai.status).to eq("success")
+        expect(ai.input_data).to eq("theme" => "健康")
+        expect(ai.model).to eq("gpt-5.4-nano")
+        expect(ai.latency_ms).to be >= 0
+      end
+    end
+
+    context "レート制限（1 分間に AI_RATE_LIMIT 回まで）" do
+      before do
+        post "/api/v1/auth/login", params: login_params, as: :json
+        allow_any_instance_of(OpenAI::Client).to receive(:chat).and_return(fake_openai_response)
+      end
+
+      it "上限を超えると 429 Too Many Requests を返す" do
+        # 過去 1 分以内の AI ログを 10 件作る
+        RateLimited::AI_RATE_LIMIT.times do
+          create(:ai_generation, user: user, generation_type: :goal_suggestion, created_at: 30.seconds.ago)
+        end
+
+        post "/api/v1/ai/goals", params: { theme: "健康" }, as: :json
+
+        expect(response).to have_http_status(:too_many_requests)
+        expect(response.parsed_body["errors"][0]["code"]).to eq("rate_limit_exceeded")
+      end
+
+      it "1 分以上前のログはカウントしない（窓のリセット）" do
+        # 1 分以上前のログ 10 件は対象外
+        RateLimited::AI_RATE_LIMIT.times do
+          create(:ai_generation, user: user, generation_type: :goal_suggestion, created_at: 2.minutes.ago)
+        end
+
+        post "/api/v1/ai/goals", params: { theme: "健康" }, as: :json
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "他ユーザーのログはカウントしない" do
+        other_user = create(:user, email: "other@example.com")
+        RateLimited::AI_RATE_LIMIT.times do
+          create(:ai_generation, user: other_user, generation_type: :goal_suggestion, created_at: 30.seconds.ago)
+        end
+
+        post "/api/v1/ai/goals", params: { theme: "健康" }, as: :json
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "失敗時のロギング" do
+      before do
+        post "/api/v1/auth/login", params: login_params, as: :json
+      end
+
+      it "Faraday エラー時は failed ステータスで AiGeneration が記録され、502 が返る" do
+        allow_any_instance_of(OpenAI::Client).to receive(:chat)
+          .and_raise(Faraday::ConnectionFailed.new("connection refused"))
+
+        expect {
+          post "/api/v1/ai/goals", params: { theme: "健康" }, as: :json
+        }.to change(AiGeneration, :count).by(1)
+
+        expect(response).to have_http_status(:bad_gateway)
+        expect(AiGeneration.last.status).to eq("failed")
+        expect(AiGeneration.last.error_message).to include("Faraday::ConnectionFailed")
+      end
     end
 
     context "ログイン中で theme が空（おまかせ／ランダムモード）の場合" do
