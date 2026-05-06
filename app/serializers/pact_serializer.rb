@@ -14,4 +14,7 @@ class PactSerializer
              :completed_at,
              :created_at,
              :updated_at
+
+  # 達成済み契約には紋章が紐づく。未達成なら null。
+  one :crest, resource: CrestSerializer
 end

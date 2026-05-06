@@ -38,18 +38,35 @@ function Layout({ children, title, showHeader = true, showFooter = true }: Layou
               誓約 <span className="text-gold mx-1">⚔</span> 契約
             </Link>
             <div className="flex items-center gap-4">
-              {title && <h1 className="font-serif text-lg text-ink/80 hidden sm:block">{title}</h1>}
+              {title && <h1 className="font-serif text-lg text-ink/80 hidden md:block">{title}</h1>}
               {isAuthenticated && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-ink/70 hidden sm:inline">{user?.nickname}</span>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="text-sm text-ink/60 hover:text-seal transition underline-offset-2 hover:underline"
-                  >
-                    ログアウト
-                  </button>
-                </div>
+                <>
+                  <nav className="hidden sm:flex items-center gap-3 text-sm font-serif">
+                    <Link to="/pacts" className="text-ink/70 hover:text-seal transition">
+                      書庫
+                    </Link>
+                    <Link to="/crests" className="text-ink/70 hover:text-seal transition">
+                      殿堂
+                    </Link>
+                  </nav>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-ink/70 hidden sm:inline">
+                      {user?.nickname}
+                      {user?.is_guest && (
+                        <span className="ml-1 text-xs px-1 py-0.5 bg-gold/20 text-ink/60 rounded-sm">
+                          ゲスト
+                        </span>
+                      )}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="text-sm text-ink/60 hover:text-seal transition underline-offset-2 hover:underline"
+                    >
+                      ログアウト
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>
