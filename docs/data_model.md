@@ -413,12 +413,20 @@ enum :rarity, {
 
 #### レアリティ計算ロジック
 
+PactCompleter と分母を統一して、`compliance_rate = kept_days / 期間日数`。
+1 日だけ kept すれば 100% 扱いになるチート（旧仕様の check_in 件数分母）を防ぐ。
+
 ```ruby
 def calculate_rarity(pact)
-  difficulty = pact.difficulty                              # 1-5
-  compliance_rate = pact.check_ins.kept.count.to_f /
-                    [pact.check_ins.count, 1].max           # 0.0-1.0
-  period_score = (pact.deadline - pact.signed_at.to_date) / 30.0  # 月数
+  difficulty = pact.difficulty                                          # 1-5
+  expected_days = (pact.deadline - pact.signed_at.to_date).to_i + 1
+  kept_days = pact.check_ins.kept
+                  .where(checked_on: pact.signed_at.to_date..pact.deadline)
+                  .distinct
+                  .count(:checked_on)
+  compliance_rate = expected_days.positive? ? [ kept_days.to_f / expected_days, 1.0 ].min : 0.0
+  # 短すぎる契約・長すぎる契約で score が爆発しないようクランプ
+  period_score = (expected_days / 30.0).clamp(0.5, 6.0)
 
   total_score = difficulty * compliance_rate * period_score
 
@@ -435,6 +443,7 @@ end
 
 - **計算データは保存しない**: difficulty, compliance_rate, period_days などは Pact / CheckIn から計算可能なので保存不要（YAGNI 原則）
 - **rarity は永久に保護**: レアリティ計算ロジックが変わっても、過去に確定した rarity は変わらない
+- **compliance_rate の分母は期間日数**: PactCompleter と統一。check_in 件数分母にすると「1 回 kept で 100%」のチートが可能になるため
 
 #### マイグレーション例
 
