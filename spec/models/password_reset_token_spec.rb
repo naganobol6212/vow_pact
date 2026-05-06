@@ -70,6 +70,24 @@ RSpec.describe PasswordResetToken, type: :model do
         t.consume!(password: "newpass1234", password_confirmation: "newpass1234")
       }.to raise_error(ArgumentError, /期限切れ/)
     end
+
+    it "新パスワードが短すぎる場合は ActiveRecord::RecordInvalid（used_at は記録されない）" do
+      t = create(:password_reset_token)
+      expect {
+        t.consume!(password: "short", password_confirmation: "short")
+      }.to raise_error(ActiveRecord::RecordInvalid)
+
+      # transaction 内で失敗したので、used_at は更新されないまま
+      expect(t.reload.used_at).to be_nil
+    end
+
+    it "新パスワードと確認が不一致なら ActiveRecord::RecordInvalid" do
+      t = create(:password_reset_token)
+      expect {
+        t.consume!(password: "newpass1234", password_confirmation: "different")
+      }.to raise_error(ActiveRecord::RecordInvalid)
+      expect(t.reload.used_at).to be_nil
+    end
   end
 
   describe "scope :active" do

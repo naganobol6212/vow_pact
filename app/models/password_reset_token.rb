@@ -26,13 +26,14 @@ class PasswordResetToken < ApplicationRecord
   end
 
   # トークンを使ってパスワードを変更し、used_at を記録する。
+  # 同時 PATCH の race（TOCTOU）を防ぐため、行ロックを取得して再判定する。
   # 既に使用済みや期限切れの場合は ArgumentError。
-  # User の更新と used_at 記録は同一 transaction 内で実行する。
   def consume!(password:, password_confirmation:)
-    raise ArgumentError, "既に使用済みのトークンです" if used?
-    raise ArgumentError, "期限切れのトークンです" if expired?
+    with_lock do
+      # ロック取得後に最新の DB 値で再判定する（reload は with_lock が暗黙に行う）
+      raise ArgumentError, "既に使用済みのトークンです" if used?
+      raise ArgumentError, "期限切れのトークンです" if expired?
 
-    transaction do
       user.update!(password: password, password_confirmation: password_confirmation)
       update!(used_at: Time.current)
     end
