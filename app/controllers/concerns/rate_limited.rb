@@ -19,7 +19,7 @@ module RateLimited
       errors: [
         {
           code: "rate_limit_exceeded",
-          message: "1 分間の AI 利用上限（#{AI_RATE_LIMIT} 回）を超えました。少し時間をおいて再度お試しください。"
+          message: I18n.t("errors.api.rate_limit_exceeded", limit: AI_RATE_LIMIT)
         }
       ]
     }, status: :too_many_requests

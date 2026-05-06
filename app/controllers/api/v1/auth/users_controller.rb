@@ -14,7 +14,7 @@ module Api
         def update_email
           unless Current.user.authenticate(params[:current_password])
             render json: {
-              errors: [ { code: "invalid_password", message: "現在のパスワードが正しくありません" } ]
+              errors: [ { code: "invalid_password", message: I18n.t("errors.api.invalid_password") } ]
             }, status: :unauthorized
             return
           end
