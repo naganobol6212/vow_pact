@@ -1,8 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
+import { motion } from "framer-motion"
 import Layout from "../components/Layout"
 import Button from "../components/Button"
 import ShareButton from "../components/ShareButton"
+import CrestSeal from "../components/CrestSeal"
 import { api, ApiError } from "../lib/api"
 import type { Pact } from "../types/pact"
 import {
@@ -10,6 +12,11 @@ import {
   SHARE_LABELS,
   buildSignedShareText,
 } from "../constants/share"
+
+const fadeUp = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+}
 
 function SignedPage() {
   const { id } = useParams<{ id: string }>()
@@ -47,31 +54,51 @@ function SignedPage() {
     )
   }
 
+  const isCompleted = pact.status === "completed"
+  const headline = isCompleted ? "成就せり" : "誓いは刻まれた"
+  const subtitle = isCompleted
+    ? "あなたの誓いは見事に達成された。紋章が授けられる。"
+    : "本書に記された誓いは、あなた自身との不動の契約となる。"
+
   return (
     <Layout title="誓約締結" showFooter={false}>
-      <div className="max-w-xl mx-auto text-center mt-8">
-        {/* シール装飾 */}
-        <div className="flex justify-center mb-6">
-          <div className="relative w-32 h-32 flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full bg-seal/10 border-4 border-seal/40 animate-pulse" />
-            <div className="absolute inset-2 rounded-full border-2 border-gold/60" />
-            <span className="font-serif text-5xl text-seal">⚔</span>
-          </div>
+      <div className="max-w-xl mx-auto text-center mt-8 px-2">
+        {/* シール演出（Framer Motion） */}
+        <div className="flex justify-center mb-8">
+          <CrestSeal
+            symbol={isCompleted ? "🏆" : "⚔"}
+            size={180}
+            emphasized={isCompleted}
+          />
         </div>
 
-        <h2 className="font-serif text-3xl text-seal mb-2">誓いは刻まれた</h2>
-        <p className="font-serif text-base text-ink/70 mb-8">
-          本書に記された誓いは、あなた自身との不動の契約となる。
-        </p>
+        <motion.h2
+          className="font-serif text-4xl text-seal mb-3"
+          {...fadeUp}
+          transition={{ duration: 0.6, delay: 0.7 }}
+        >
+          {headline}
+        </motion.h2>
+        <motion.p
+          className="font-serif text-base text-ink/70 mb-10"
+          {...fadeUp}
+          transition={{ duration: 0.6, delay: 0.85 }}
+        >
+          {subtitle}
+        </motion.p>
 
         {/* 契約サマリ */}
-        <div className="text-left p-6 bg-parchment border-2 border-gold/60 rounded-sm mb-8">
+        <motion.div
+          className="text-left p-6 bg-parchment border-2 border-gold/60 rounded-xl shadow-lg mb-8"
+          {...fadeUp}
+          transition={{ duration: 0.6, delay: 1.0 }}
+        >
           <section className="mb-3">
             <p className="text-xs text-ink/60 font-serif">目標</p>
             <p className="text-base text-ink">{pact.goal}</p>
           </section>
           <section className="mb-3">
-            <p className="text-xs text-ink/60 font-serif">試練</p>
+            <p className="text-xs text-ink/60 font-serif">制約</p>
             <p className="text-base text-ink">{pact.constraint_text}</p>
           </section>
           <section className="mb-3">
@@ -94,30 +121,44 @@ function SignedPage() {
               })()}
             </p>
           </section>
-        </div>
+        </motion.div>
 
-        {/* 契約締結のシェア（Issue #26） */}
-        <div className="mb-6">
+        {/* 契約締結のシェア。
+            公開設定なら /p/:id（認証不要・OG image 付き）、非公開なら /pacts/:id/signed を使う。 */}
+        <motion.div className="mb-6 space-y-3" {...fadeUp} transition={{ duration: 0.6, delay: 1.15 }}>
           <ShareButton
             text={buildSignedShareText({
               goal: pact.goal,
               constraintText: pact.constraint_text,
               deadline: pact.deadline,
             })}
-            url={`${window.location.origin}/pacts/${pact.id}/signed`}
+            url={
+              pact.is_public
+                ? `${window.location.origin}/p/${pact.id}`
+                : `${window.location.origin}/pacts/${pact.id}/signed`
+            }
             hashtags={[...SHARE_HASHTAGS]}
             label={SHARE_LABELS.signed}
           />
-        </div>
+          {!pact.is_public && (
+            <p className="text-xs text-ink/50">
+              X カードに契約書の画像を表示するには、契約詳細画面で「公開設定」をオンにしてください。
+            </p>
+          )}
+        </motion.div>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <motion.div
+          className="flex flex-col sm:flex-row gap-3 justify-center"
+          {...fadeUp}
+          transition={{ duration: 0.6, delay: 1.3 }}
+        >
           <Button variant="ghost" onClick={() => navigate("/")}>
             ホームへ
           </Button>
           <Button variant="primary" onClick={() => navigate("/pacts/new/step1")}>
             新たな誓いを立てる
           </Button>
-        </div>
+        </motion.div>
       </div>
     </Layout>
   )

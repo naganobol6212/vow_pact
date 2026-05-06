@@ -72,11 +72,11 @@ function CrestsGalleryPage() {
   )
 
   return (
-    <Layout title="誓約の殿堂">
+    <Layout title="紋章コレクション">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 text-center">
-          <p className="font-serif text-xl text-seal mb-2">誓約の殿堂</p>
-          <p className="text-sm text-ink/60">これまでに刻みし {earned.length} 個の紋章</p>
+          <p className="font-serif text-2xl text-seal mb-2">紋章コレクション</p>
+          <p className="text-sm text-ink/60">達成した契約から授与された紋章 {earned.length} 個</p>
         </div>
 
         {/* タブ */}
