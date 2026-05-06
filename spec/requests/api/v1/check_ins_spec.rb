@@ -133,6 +133,12 @@ RSpec.describe "Api::V1::CheckIns", type: :request do
       get "/api/v1/pacts/#{other_pact.id}/check_ins"
       expect(response).to have_http_status(:not_found)
     end
+
+    it "未ログインなら 401" do
+      delete "/api/v1/auth/logout"
+      get "/api/v1/pacts/#{pact.id}/check_ins"
+      expect(response).to have_http_status(:unauthorized)
+    end
   end
 
   describe "DELETE /api/v1/pacts/:pact_id/check_ins/:id" do
@@ -161,6 +167,20 @@ RSpec.describe "Api::V1::CheckIns", type: :request do
       other_pact = create(:pact, user: user, signed_at: 1.day.ago)
       delete "/api/v1/pacts/#{other_pact.id}/check_ins/#{check_in.id}"
       expect(response).to have_http_status(:not_found)
+    end
+
+    it "未ログインなら 401" do
+      delete "/api/v1/auth/logout"
+      delete "/api/v1/pacts/#{pact.id}/check_ins/#{check_in.id}"
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
+  describe "POST /api/v1/pacts/:pact_id/check_ins の不正な status" do
+    it "不正な enum 値（'admin' など）を渡すと 422 Unprocessable Content を返す" do
+      post "/api/v1/pacts/#{pact.id}/check_ins", params: { status: "admin" }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body["errors"][0]["code"]).to eq("invalid_argument")
     end
   end
 end
