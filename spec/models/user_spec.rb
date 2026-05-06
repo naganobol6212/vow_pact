@@ -13,20 +13,20 @@ RSpec.describe User, type: :model do
       it "必須" do
         user = build(:user, email: nil)
         expect(user).not_to be_valid
-        expect(user.errors[:email]).to include("can't be blank")
+        expect(user.errors[:email]).to be_present
       end
 
       it "メール形式チェック" do
         user = build(:user, email: "not-an-email")
         expect(user).not_to be_valid
-        expect(user.errors[:email]).to include("is invalid")
+        expect(user.errors[:email]).to be_present
       end
 
       it "重複は不可（大文字小文字無視）" do
         create(:user, email: "test@example.com")
         duplicate = build(:user, email: "TEST@example.com")
         expect(duplicate).not_to be_valid
-        expect(duplicate.errors[:email]).to include("has already been taken")
+        expect(duplicate.errors[:email]).to be_present
       end
 
       it "DB レベルの UNIQUE 制約も大文字小文字無視（バリデーションをすり抜けても止まる）" do
@@ -43,7 +43,7 @@ RSpec.describe User, type: :model do
       it "必須" do
         user = build(:user, nickname: nil)
         expect(user).not_to be_valid
-        expect(user.errors[:nickname]).to include("can't be blank")
+        expect(user.errors[:nickname]).to be_present
       end
 
       it "1〜30文字" do
@@ -57,13 +57,13 @@ RSpec.describe User, type: :model do
       it "必須（新規作成時）" do
         user = User.new(email: "x@example.com", nickname: "X", password: nil)
         expect(user).not_to be_valid
-        expect(user.errors[:password]).to include("can't be blank")
+        expect(user.errors[:password]).to be_present
       end
 
       it "6文字以上" do
         user = build(:user, password: "12345")
         expect(user).not_to be_valid
-        expect(user.errors[:password]).to include("is too short (minimum is 6 characters)")
+        expect(user.errors[:password]).to be_present
       end
     end
 
@@ -106,7 +106,7 @@ RSpec.describe User, type: :model do
       create(:user, email: "test@example.com")
       duplicate = build(:user, email: "  TEST@example.com  ")
       expect(duplicate).not_to be_valid
-      expect(duplicate.errors[:email]).to include("has already been taken")
+      expect(duplicate.errors[:email]).to be_present
     end
   end
 

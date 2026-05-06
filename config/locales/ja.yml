@@ -1,0 +1,215 @@
+ja:
+  # ============================================================
+  # ActiveRecord 標準
+  # ============================================================
+  activerecord:
+    models:
+      user: "ユーザー"
+      pact: "誓約"
+      check_in: "チェックイン"
+      crest: "紋章"
+      ai_generation: "AI 生成履歴"
+      password_reset_token: "パスワード再設定トークン"
+
+    attributes:
+      user:
+        email: "メールアドレス"
+        password: "パスワード"
+        password_confirmation: "パスワード（確認）"
+        nickname: "ニックネーム"
+        avatar_url: "アバター URL"
+        is_public: "公開設定"
+        is_guest: "ゲスト"
+        streak_count: "連続記録"
+        longest_streak: "最長記録"
+        current_password: "現在のパスワード"
+      pact:
+        goal: "目標"
+        constraint_text: "制約"
+        difficulty: "難易度"
+        difficulty_reason: "難易度の理由"
+        deadline: "期日"
+        signed_at: "締結日時"
+        completed_at: "達成日時"
+        status: "状態"
+        title: "称号"
+      check_in:
+        pact: "誓約"
+        checked_on: "チェックイン日"
+        status: "状態"
+        note: "メモ"
+      crest:
+        pact: "誓約"
+        rarity: "レアリティ"
+        crest_data: "紋章データ"
+        generated_at: "生成日時"
+      password_reset_token:
+        token: "トークン"
+        expires_at: "有効期限"
+        used_at: "使用日時"
+
+    errors:
+      messages:
+        record_invalid: "バリデーションに失敗しました: %{errors}"
+        restrict_dependent_destroy:
+          has_one: "%{record}が存在しているので削除できません"
+          has_many: "%{record}が存在しているので削除できません"
+
+      models:
+        pact:
+          attributes:
+            deadline:
+              must_be_future: "は未来の日付を指定してください"
+          too_many_active: "進行中の誓約は最大 %{limit} つまでです"
+        check_in:
+          attributes:
+            checked_on:
+              future_not_allowed: "は未来の日付にできません"
+              before_signed_at: "は契約締結日以降である必要があります"
+            pact:
+              must_be_active: "は active でなければなりません"
+        crest:
+          attributes:
+            crest_data:
+              missing_keys: "は必須キー %{keys} を含む必要があります"
+            pact:
+              must_be_completed: "は completed 状態である必要があります"
+
+  # ============================================================
+  # Vow Pact 固有
+  # ============================================================
+  pacts:
+    headings:
+      new: "新たな誓いを立てる"
+      list: "誓約の書庫"
+      detail: "誓約の詳細"
+      signed: "誓いは刻まれた"
+    statuses:
+      active: "進行中"
+      completed: "達成"
+      failed: "失敗"
+      abandoned: "破棄"
+    buttons:
+      sign: "ここに誓う"
+      next: "次へ"
+      back: "戻る"
+      abandon: "誓いを破棄する"
+    messages:
+      signed: "本書に記された誓いは、あなた自身との不動の契約となる。"
+      completed: "成就せり"
+
+  check_ins:
+    statuses:
+      kept: "守れた"
+      broken: "破れた"
+      skipped: "休戦"
+    buttons:
+      submit: "記録する"
+
+  crests:
+    headings:
+      gallery: "誓約の殿堂"
+    rarities:
+      common: "通常"
+      rare: "稀少"
+      epic: "英雄"
+      legendary: "伝説"
+    labels:
+      common: "Common"
+      rare: "Rare"
+      epic: "Epic"
+      legendary: "Legendary"
+
+  rankings:
+    headings:
+      title: "誓約者の番付"
+      streak: "連続日数"
+      monthly: "今月の達成数"
+    labels:
+      my_rank: "あなたの順位"
+      out_of_rank: "圏外"
+      you: "あなた"
+      private_notice: "あなたは「ランキング非表示」設定です。一覧には載りませんが、自分の順位は見えます。"
+
+  ai:
+    buttons:
+      suggest_goal: "AI に提案してもらう"
+      suggest_random: "おまかせで提案してもらう"
+      suggest_constraint: "AI に提案してもらう"
+      judge_difficulty: "難易度を判定"
+      generate_title: "称号を授かる"
+    placeholders:
+      theme: "例：健康、学習、創作"
+    messages:
+      suggesting: "提案中..."
+      failed: "提案を取得できませんでした。再度お試しください。"
+
+  share:
+    buttons:
+      signed: "𝕏で天下に宣する"
+      check_in: "𝕏で歩みを刻む"
+      fulfilled: "𝕏で栄光を示す"
+
+  auth:
+    headings:
+      login: "ログイン"
+      signup: "新規登録"
+      forgot_password: "パスワードをお忘れですか"
+      reset_password: "新しいパスワードを設定"
+    buttons:
+      login: "ここに誓う"
+      signup: "誓約を交わす"
+      logout: "ログアウト"
+      guest_start: "登録せずに試してみる"
+      forgot_password_link: "パスワードを忘れた方"
+      send_reset_link: "再設定リンクを送る"
+      update_password: "パスワードを更新"
+      back_to_login: "ログイン画面へ戻る"
+    messages:
+      reset_email_sent: "再設定リンクを記載したメールを送信しました（該当アカウントが存在する場合）"
+      password_updated: "パスワードを更新しました"
+      send_failed: "送信に失敗しました。ネットワーク接続を確認するか、しばらくしてから再度お試しください。"
+      invalid_token_title: "リンクが無効です"
+      invalid_token_message: "このリンクは期限切れか、既に使用されています。再度パスワード再設定リクエストをお送りください。"
+      network_error_title: "通信エラー"
+      network_error_message: "サーバーに接続できませんでした。ネットワーク接続を確認のうえ、ページを再読み込みしてください。"
+
+  settings:
+    headings:
+      title: "設定"
+      profile: "プロフィール"
+      email_change: "メールアドレス変更"
+      password_change: "パスワード変更"
+      logout: "ログアウト"
+      promote: "正式登録する"
+    messages:
+      saved: "保存しました"
+      promote_completed: "正式登録が完了しました。これからもよろしく。"
+      promote_description: "メールアドレスとパスワードを登録すると、これまでの誓約・チェックイン・紋章がそのまま引き継がれます。30 日経過すると自動で削除されます。"
+
+  # API エラーレスポンス内のメッセージ
+  errors:
+    api:
+      not_found: "リソースが見つかりません"
+      unauthorized: "認証が必要です"
+      rate_limit_exceeded: "1 分間の AI 利用上限（%{limit} 回）を超えました。少し時間をおいて再度お試しください。"
+      invalid_password: "現在のパスワードが正しくありません"
+      invalid_credentials: "メールアドレスまたはパスワードが正しくありません"
+      ai_parse_error: "AI レスポンスを解釈できませんでした。再度お試しください。"
+      ai_upstream_error: "AI サービスに接続できませんでした。しばらくしてから再度お試しください。"
+      not_a_guest: "登録済みユーザーは promote できません"
+      invalid_or_expired_token: "リンクが無効または期限切れです"
+      already_used_token: "既に使用済みのトークンです"
+      expired_token: "期限切れのトークンです"
+
+  # メール本文
+  passwords_mailer:
+    reset:
+      subject: "【Vow Pact】パスワード再設定のご案内"
+      greeting: "%{nickname} 様"
+      body: "Vow Pact のパスワード再設定リクエストを受け付けました。下のリンクから新しいパスワードを設定してください。"
+      cta: "パスワードを再設定する"
+      fallback: "ボタンが動作しない場合は、以下の URL をブラウザに貼り付けてください。"
+      expires_in: "このリンクは %{minutes} 分で失効します。"
+      not_requested: "リクエストに心当たりがない場合は、このメールを破棄してください。"
+      signature: "— Vow Pact"

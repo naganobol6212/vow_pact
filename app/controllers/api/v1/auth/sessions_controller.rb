@@ -13,7 +13,7 @@ module Api
             render json: UserSerializer.new(user).serializable_hash, status: :ok
           else
             render json: {
-              errors: [ { code: "invalid_credentials", message: "メールアドレスまたはパスワードが正しくありません" } ]
+              errors: [ { code: "invalid_credentials", message: I18n.t("errors.api.invalid_credentials") } ]
             }, status: :unauthorized
           end
         end

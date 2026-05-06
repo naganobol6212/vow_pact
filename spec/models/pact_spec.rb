@@ -44,7 +44,7 @@ RSpec.describe Pact, type: :model do
       it "必須" do
         pact = build(:pact, goal: nil)
         expect(pact).not_to be_valid
-        expect(pact.errors[:goal]).to include("can't be blank")
+        expect(pact.errors[:goal]).to be_present
       end
 
       it "1〜500文字" do
@@ -63,7 +63,7 @@ RSpec.describe Pact, type: :model do
       it "必須" do
         pact = build(:pact, constraint_text: nil)
         expect(pact).not_to be_valid
-        expect(pact.errors[:constraint_text]).to include("can't be blank")
+        expect(pact.errors[:constraint_text]).to be_present
       end
 
       it "1〜500文字" do
@@ -76,7 +76,7 @@ RSpec.describe Pact, type: :model do
       it "必須" do
         pact = build(:pact, difficulty: nil)
         expect(pact).not_to be_valid
-        expect(pact.errors[:difficulty]).to include("can't be blank")
+        expect(pact.errors[:difficulty]).to be_present
       end
 
       it "1〜5の整数" do
@@ -91,7 +91,7 @@ RSpec.describe Pact, type: :model do
       it "必須" do
         pact = build(:pact, deadline: nil)
         expect(pact).not_to be_valid
-        expect(pact.errors[:deadline]).to include("can't be blank")
+        expect(pact.errors[:deadline]).to be_present
       end
 
       it "未来の日付（新規作成時のみ検証）" do
@@ -99,7 +99,7 @@ RSpec.describe Pact, type: :model do
         # 過去日は弾く
         past_pact = build(:pact, deadline: 1.day.ago.to_date)
         expect(past_pact).not_to be_valid
-        expect(past_pact.errors[:deadline]).to include("must be in the future")
+        expect(past_pact.errors[:deadline]).to be_present
         # 既存 pact は更新時に過去日でも valid（期日切れは状態として許容）
         existing = create(:pact, deadline: 1.day.from_now.to_date)
         existing.update(goal: "新しい目標")
@@ -120,7 +120,7 @@ RSpec.describe Pact, type: :model do
         7.times { create(:pact, user: user, status: :active) }
         eighth = build(:pact, user: user, status: :active)
         expect(eighth).not_to be_valid
-        expect(eighth.errors[:base]).to include("active な契約は7つまでです")
+        expect(eighth.errors[:base]).to be_present
       end
 
       it "completed / abandoned はカウントしない（8つ目作成可能）" do

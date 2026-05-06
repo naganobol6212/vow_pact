@@ -8,7 +8,7 @@ module Api
         def update
           unless Current.user&.is_guest?
             render json: {
-              errors: [ { code: "not_a_guest", message: "登録済みユーザーは promote できません" } ]
+              errors: [ { code: "not_a_guest", message: I18n.t("errors.api.not_a_guest") } ]
             }, status: :unprocessable_entity
             return
           end

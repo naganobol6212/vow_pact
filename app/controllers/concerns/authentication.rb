@@ -29,7 +29,7 @@ module Authentication
     end
 
     def request_authentication
-      render json: { errors: [ { code: "unauthorized", message: "ログインが必要です" } ] }, status: :unauthorized
+      render json: { errors: [ { code: "unauthorized", message: I18n.t("errors.api.unauthorized") } ] }, status: :unauthorized
     end
 
     def start_new_session_for(user)

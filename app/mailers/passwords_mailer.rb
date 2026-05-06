@@ -8,7 +8,7 @@ class PasswordsMailer < ApplicationMailer
     @reset_url = build_reset_url(token.token)
     @expires_in_minutes = (PasswordResetToken::EXPIRATION / 60).to_i
 
-    mail(to: @user.email, subject: "【Vow Pact】パスワード再設定のご案内")
+    mail(to: @user.email, subject: I18n.t("passwords_mailer.reset.subject"))
   end
 
   private

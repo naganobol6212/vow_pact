@@ -30,18 +30,24 @@ class CheckIn < ApplicationRecord
 
   def checked_on_not_in_future
     return if checked_on.blank?
-    errors.add(:checked_on, "は未来の日付にできません") if checked_on > Time.zone.today
+    if checked_on > Time.zone.today
+      errors.add(:checked_on, I18n.t("activerecord.errors.models.check_in.attributes.checked_on.future_not_allowed"))
+    end
   end
 
   def checked_on_after_pact_signed_at
     return if checked_on.blank? || pact.blank? || pact.signed_at.blank?
     # pact.signed_at は datetime なので date に揃えて比較
-    errors.add(:checked_on, "は契約締結日以降である必要があります") if checked_on < pact.signed_at.to_date
+    if checked_on < pact.signed_at.to_date
+      errors.add(:checked_on, I18n.t("activerecord.errors.models.check_in.attributes.checked_on.before_signed_at"))
+    end
   end
 
   def pact_must_be_active
     return if pact.blank?
-    errors.add(:pact, "は active でなければなりません") unless pact.active?
+    unless pact.active?
+      errors.add(:pact, I18n.t("activerecord.errors.models.check_in.attributes.pact.must_be_active"))
+    end
   end
 
   def recalc_user_streak

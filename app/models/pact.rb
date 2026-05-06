@@ -38,7 +38,7 @@ class Pact < ApplicationRecord
     return if deadline.blank?
     return if deadline > Date.current
 
-    errors.add(:deadline, "must be in the future")
+    errors.add(:deadline, I18n.t("activerecord.errors.models.pact.attributes.deadline.must_be_future"))
   end
 
   def active_pacts_limit
@@ -47,7 +47,7 @@ class Pact < ApplicationRecord
     active_count = user.pacts.where(status: :active).where.not(id: id).count
     return if active_count < MAX_ACTIVE_PACTS
 
-    errors.add(:base, "active な契約は#{MAX_ACTIVE_PACTS}つまでです")
+    errors.add(:base, I18n.t("activerecord.errors.models.pact.too_many_active", limit: MAX_ACTIVE_PACTS))
   end
 
   def strip_text_fields

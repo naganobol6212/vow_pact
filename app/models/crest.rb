@@ -23,11 +23,14 @@ class Crest < ApplicationRecord
     return if crest_data.blank?
     missing = REQUIRED_CREST_DATA_KEYS - crest_data.keys.map(&:to_s)
     return if missing.empty?
-    errors.add(:crest_data, "は必須キー #{missing.join(', ')} を含む必要があります")
+    errors.add(:crest_data, I18n.t("activerecord.errors.models.crest.attributes.crest_data.missing_keys",
+                                    keys: missing.join(", ")))
   end
 
   def pact_must_be_completed
     return if pact.blank?
-    errors.add(:pact, "は completed 状態である必要があります") unless pact.completed?
+    unless pact.completed?
+      errors.add(:pact, I18n.t("activerecord.errors.models.crest.attributes.pact.must_be_completed"))
+    end
   end
 end

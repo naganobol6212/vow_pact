@@ -38,5 +38,11 @@ module VowPact
 
     # Don't generate system test files.
     config.generators.system_tests = nil
+
+    # i18n（多言語対応）
+    config.i18n.default_locale = :ja
+    config.i18n.available_locales = %i[ja]
+    config.i18n.load_path += Dir[Rails.root.join("config/locales/**/*.{yml,rb}")]
+    # ネストしたディレクトリ（locales/models/*.yml 等）も読み込む
   end
 end
