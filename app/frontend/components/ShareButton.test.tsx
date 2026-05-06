@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { describe, it, expect, vi } from "vitest"
+import { render, screen, fireEvent } from "@testing-library/react"
 import ShareButton from "./ShareButton"
 
 describe("ShareButton", () => {
@@ -28,5 +28,13 @@ describe("ShareButton", () => {
     const href = link.getAttribute("href") ?? ""
     expect(href).toContain("hashtags=vow_pact")
     expect(href).toContain(`url=${encodeURIComponent("https://example.com/p/1")}`)
+  })
+
+  it("onBeforeShare があるとクリック時に呼び出される（fire-and-forget）", () => {
+    const spy = vi.fn()
+    render(<ShareButton text="hi" label="シェア" onBeforeShare={spy} />)
+    const link = screen.getByRole("link", { name: /シェア/ })
+    fireEvent.click(link)
+    expect(spy).toHaveBeenCalledTimes(1)
   })
 })

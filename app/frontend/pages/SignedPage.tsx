@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { motion } from "framer-motion"
 import Layout from "../components/Layout"
 import Button from "../components/Button"
@@ -21,6 +21,7 @@ const fadeUp = {
 function SignedPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const {
     data: pact,
@@ -31,6 +32,19 @@ function SignedPage() {
     queryFn: () => api<Pact>(`/pacts/${id}`),
     enabled: !!id,
     retry: false,
+  })
+
+  // X シェア時に契約を公開状態へ切り替えるための mutation。
+  // ボタン押下と同時に fire-and-forget で叩く（ユーザージェスチャを切らさない）。
+  // PATCH は通常 1 秒未満で終わるため、X 側の OG クローラー（投稿後にフェッチ）に十分間に合う想定。
+  const publishMutation = useMutation<Pact, ApiError, void>({
+    mutationFn: () =>
+      api<Pact>(`/pacts/${id}`, { method: "PATCH", body: { is_public: true } }),
+    onSuccess: () => {
+      // キャッシュ更新（詳細画面トグルや他箇所に反映）
+      queryClient.invalidateQueries({ queryKey: ["pact", id] })
+      queryClient.invalidateQueries({ queryKey: ["pacts"] })
+    },
   })
 
   if (isLoading) {
@@ -123,28 +137,27 @@ function SignedPage() {
           </section>
         </motion.div>
 
-        {/* 契約締結のシェア。
-            公開設定なら /p/:id（認証不要・OG image 付き）、非公開なら /pacts/:id/signed を使う。 */}
-        <motion.div className="mb-6 space-y-3" {...fadeUp} transition={{ duration: 0.6, delay: 1.15 }}>
+        {/* X シェア。常に /p/:id を使い、押下時に契約を公開化する（A 案）。
+            これにより最初の締結時から OG カード（契約書 PNG）が表示される。 */}
+        <motion.div className="mb-6 space-y-2" {...fadeUp} transition={{ duration: 0.6, delay: 1.15 }}>
           <ShareButton
             text={buildSignedShareText({
               goal: pact.goal,
               constraintText: pact.constraint_text,
               deadline: pact.deadline,
             })}
-            url={
-              pact.is_public
-                ? `${window.location.origin}/p/${pact.id}`
-                : `${window.location.origin}/pacts/${pact.id}/signed`
-            }
+            url={`${window.location.origin}/p/${pact.id}`}
             hashtags={[...SHARE_HASHTAGS]}
             label={SHARE_LABELS.signed}
+            onBeforeShare={() => {
+              if (!pact.is_public) publishMutation.mutate()
+            }}
           />
-          {!pact.is_public && (
-            <p className="text-xs text-ink/50">
-              X カードに契約書の画像を表示するには、契約詳細画面で「公開設定」をオンにしてください。
-            </p>
-          )}
+          <p className="text-xs text-ink/50">
+            シェアすると契約が公開状態になり、X 上に契約書のカード画像が表示されます。
+            <br />
+            あとで契約詳細画面から非公開に戻すこともできます。
+          </p>
         </motion.div>
 
         <motion.div
