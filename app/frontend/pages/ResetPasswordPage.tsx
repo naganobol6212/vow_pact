@@ -14,12 +14,18 @@ function ResetPasswordPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [success, setSuccess] = useState(false)
 
-  // トークンの事前検証（無効・期限切れなら早めにエラー表示）
+  // トークンの事前検証（無効・期限切れなら早めにエラー表示）。
+  // 一時的なネットワーク障害で誤って「無効」表示しないよう、
+  // 4xx は即時エラー扱い、ネットワーク系/5xx は 1 回までリトライする。
   const tokenQuery = useQuery<{ valid: boolean }, ApiError>({
     queryKey: ["password_reset_token", token],
     queryFn: () => api<{ valid: boolean }>(`/auth/password_resets/${token}`),
     enabled: !!token,
-    retry: false,
+    retry: (failureCount, error) => {
+      // 4xx（404 など）は即時 fail（リトライしてもトークンは無効のまま）
+      if (error instanceof ApiError && error.status >= 400 && error.status < 500) return false
+      return failureCount < 1
+    },
   })
 
   const mutation = useMutation<void, ApiError, void>({
@@ -54,18 +60,40 @@ function ResetPasswordPage() {
   }
 
   if (tokenQuery.isError) {
+    // 4xx（404 など）はトークン自体が無効。それ以外（ネットワーク / 5xx）は接続障害扱い。
+    const isInvalidToken =
+      tokenQuery.error instanceof ApiError &&
+      tokenQuery.error.status >= 400 &&
+      tokenQuery.error.status < 500
+
     return (
       <Layout title="パスワード再設定">
         <div className="max-w-md mx-auto mt-8 text-center">
-          <p className="font-serif text-xl text-seal mb-3">リンクが無効です</p>
-          <p className="text-sm text-ink/70 mb-6">
-            このリンクは期限切れか、既に使用されています。
-            <br />
-            再度パスワード再設定リクエストをお送りください。
-          </p>
-          <Link to="/forgot-password">
-            <Button variant="primary">再設定リンクを再送する</Button>
-          </Link>
+          {isInvalidToken ? (
+            <>
+              <p className="font-serif text-xl text-seal mb-3">リンクが無効です</p>
+              <p className="text-sm text-ink/70 mb-6">
+                このリンクは期限切れか、既に使用されています。
+                <br />
+                再度パスワード再設定リクエストをお送りください。
+              </p>
+              <Link to="/forgot-password">
+                <Button variant="primary">再設定リンクを再送する</Button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <p className="font-serif text-xl text-seal mb-3">通信エラー</p>
+              <p className="text-sm text-ink/70 mb-6">
+                サーバーに接続できませんでした。
+                <br />
+                ネットワーク接続を確認のうえ、ページを再読み込みしてください。
+              </p>
+              <Button variant="primary" onClick={() => tokenQuery.refetch()}>
+                再試行
+              </Button>
+            </>
+          )}
         </div>
       </Layout>
     )

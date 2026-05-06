@@ -9,6 +9,7 @@ import { api, ApiError } from "../lib/api"
 function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [submitted, setSubmitted] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const mutation = useMutation<unknown, ApiError, void>({
     mutationFn: () =>
@@ -16,7 +17,17 @@ function ForgotPasswordPage() {
         method: "POST",
         body: { email },
       }),
-    onSuccess: () => setSubmitted(true),
+    onSuccess: () => {
+      setErrorMessage(null)
+      setSubmitted(true)
+    },
+    onError: () => {
+      // ネットワーク障害 / 5xx 時にユーザーへフィードバックを返す。
+      // 成功系（user enumeration 防止のため 202）は引き続き同じレスポンスにする。
+      setErrorMessage(
+        "送信に失敗しました。ネットワーク接続を確認するか、しばらくしてから再度お試しください。"
+      )
+    },
   })
 
   return (
@@ -52,6 +63,11 @@ function ForgotPasswordPage() {
               mutation.mutate()
             }}
           >
+            {errorMessage && (
+              <p className="mb-3 p-2 text-xs text-seal bg-seal/10 border border-seal/30 rounded-sm" role="alert">
+                {errorMessage}
+              </p>
+            )}
             <FormField
               label="メールアドレス"
               type="email"
