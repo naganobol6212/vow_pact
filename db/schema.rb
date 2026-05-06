@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_06_045953) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_06_055554) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -88,6 +88,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_06_045953) do
     t.string "avatar_url"
     t.datetime "created_at", null: false
     t.string "email", null: false
+    t.boolean "is_guest", default: false, null: false
     t.boolean "is_public", default: true, null: false
     t.integer "longest_streak", default: 0, null: false
     t.string "nickname", null: false
@@ -95,6 +96,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_06_045953) do
     t.integer "streak_count", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true
+    t.index ["is_guest", "created_at"], name: "index_users_on_is_guest_and_created_at"
   end
 
   add_foreign_key "ai_generations", "pacts"

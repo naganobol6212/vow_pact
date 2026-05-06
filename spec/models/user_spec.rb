@@ -126,4 +126,87 @@ RSpec.describe User, type: :model do
       expect(user.password_digest).not_to eq("mypassword")
     end
   end
+
+  describe "Guest user" do
+    describe ".create_guest!" do
+      it "is_guest=true / nickname=ゲスト / email=guest_xxx@guest.local の User を作成" do
+        guest = described_class.create_guest!
+        expect(guest).to be_persisted
+        expect(guest.is_guest).to be true
+        expect(guest.nickname).to eq(User::GUEST_NICKNAME)
+        expect(guest.email).to match(/\Aguest_[0-9a-f]{16}@guest\.local\z/)
+        expect(guest.is_public).to be false
+      end
+
+      it "create_guest! は何度呼んでも email が衝突しない" do
+        guests = 5.times.map { described_class.create_guest! }
+        expect(guests.map(&:email).uniq.size).to eq(5)
+      end
+    end
+
+    describe "#promote_to_registered!" do
+      let(:guest) { described_class.create_guest! }
+
+      it "email / password / nickname を更新し is_guest=false に切り替える" do
+        guest.promote_to_registered!(
+          email: "real@example.com",
+          password: "password123",
+          password_confirmation: "password123",
+          nickname: "勇者"
+        )
+        guest.reload
+        expect(guest.email).to eq("real@example.com")
+        expect(guest.is_guest).to be false
+        expect(guest.nickname).to eq("勇者")
+        expect(guest.authenticate("password123")).to eq(guest)
+      end
+
+      it "nickname 未指定なら既存の nickname を保持" do
+        guest.promote_to_registered!(
+          email: "real2@example.com", password: "password123", password_confirmation: "password123"
+        )
+        expect(guest.reload.nickname).to eq(User::GUEST_NICKNAME)
+      end
+
+      it "既に登録済みのユーザーを promote しようとすると ArgumentError" do
+        registered = create(:user, is_guest: false)
+        expect {
+          registered.promote_to_registered!(
+            email: "x@example.com", password: "password123", password_confirmation: "password123"
+          )
+        }.to raise_error(ArgumentError)
+      end
+
+      it "promote 後も既存の Pact が引き継がれる（同じ User なので id 不変）" do
+        pact = create(:pact, user: guest, signed_at: 1.day.ago)
+        guest.promote_to_registered!(
+          email: "real3@example.com", password: "password123", password_confirmation: "password123"
+        )
+        expect(guest.reload.pacts).to include(pact)
+      end
+    end
+
+    describe "scopes" do
+      let!(:guest1) { described_class.create_guest! }
+      let!(:guest2) { described_class.create_guest! }
+      let!(:registered) { create(:user, is_guest: false) }
+
+      it "guest scope で is_guest=true のみ取得" do
+        expect(described_class.guest).to match_array([ guest1, guest2 ])
+      end
+
+      it "registered scope で is_guest=false のみ取得" do
+        expect(described_class.registered).to include(registered)
+        expect(described_class.registered).not_to include(guest1, guest2)
+      end
+
+      it "expired_guests は GUEST_EXPIRATION より古いゲストのみ" do
+        old_guest = described_class.create_guest!
+        old_guest.update_columns(created_at: 31.days.ago)
+
+        expect(described_class.expired_guests).to include(old_guest)
+        expect(described_class.expired_guests).not_to include(guest1, registered)
+      end
+    end
+  end
 end
