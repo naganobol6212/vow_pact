@@ -135,6 +135,8 @@
 | 本番 DB            | Neon Free（PostgreSQL）                    |
 | CI / CD            | GitHub Actions（lint + scan + Render auto-deploy）|
 
+設計判断の詳細は [`docs/architecture.md`](docs/architecture.md) を参照。
+
 ---
 
 ## プロジェクト構造

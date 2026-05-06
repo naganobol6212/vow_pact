@@ -217,14 +217,15 @@ docker compose exec web npm run lint
 
 ## 11. 参照先
 
-| カテゴリ     | 参照先                  |
-| ------------ | ----------------------- |
-| データモデル | `docs/data_model.md`    |
-| API 設計     | `docs/api_design.md`    |
-| デザイン詳細 | `docs/design_guide.md`  |
-| モックアップ | `docs/VowPact_mock/`    |
-| 環境変数     | `.env.example`          |
-| Rails ガイド | https://railsguides.jp/ |
+| カテゴリ       | 参照先                    |
+| -------------- | ------------------------- |
+| アーキテクチャ | `docs/architecture.md`    |
+| データモデル   | `docs/data_model.md`      |
+| API 設計       | `docs/api_design.md`      |
+| デザイン詳細   | `docs/design_guide.md`    |
+| モックアップ   | `docs/VowPact_mock/`      |
+| 環境変数       | `.env.example`            |
+| Rails ガイド   | https://railsguides.jp/   |
 
 ---
 
