@@ -12,6 +12,8 @@ import PactDetailPage from "./pages/PactDetailPage"
 import CrestsGalleryPage from "./pages/CrestsGalleryPage"
 import RankingsPage from "./pages/RankingsPage"
 import SettingsPage from "./pages/SettingsPage"
+import ForgotPasswordPage from "./pages/ForgotPasswordPage"
+import ResetPasswordPage from "./pages/ResetPasswordPage"
 import RequireAuth from "./components/RequireAuth"
 import { CreatePactProvider } from "./contexts/CreatePactContext"
 
@@ -25,6 +27,10 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/signup" element={<AuthPage />} />
+
+          {/* パスワード再設定（未ログインで叩く） */}
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
           {/* 認証必須 + 契約作成フロー（4 ステップで Context 共有） */}
           <Route
