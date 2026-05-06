@@ -23,15 +23,26 @@ module Api
           fresh_when(etag: pact, last_modified: pact.updated_at, public: true)
           return if request.fresh?(response)
 
-          cache_key = [ "pact_og_image", pact.id, pact.updated_at.to_i ]
-          png = Rails.cache.fetch(cache_key, expires_in: OG_IMAGE_CACHE_TTL) do
-            PactOgImageGenerator.new(pact).to_png
-          end
+          png = fetch_or_generate_png(pact)
 
           send_data png, type: "image/png", disposition: "inline",
                           filename: "pact-#{pact.id}-og.png"
         rescue ActiveRecord::RecordNotFound
           head :not_found
+        end
+
+        private
+
+        # Solid Cache から取り出すが、cache レイヤで例外が出たら同期生成にフォールバックする。
+        # 本番でキャッシュ DB がエラーになっても 500 にせず PNG を返し続けることを優先する。
+        def fetch_or_generate_png(pact)
+          cache_key = [ "pact_og_image", pact.id, pact.updated_at.to_i ]
+          Rails.cache.fetch(cache_key, expires_in: OG_IMAGE_CACHE_TTL) do
+            PactOgImageGenerator.new(pact).to_png
+          end
+        rescue StandardError => e
+          Rails.logger.error("[OgImage] cache failed: #{e.class}: #{e.message}")
+          PactOgImageGenerator.new(pact).to_png
         end
       end
     end
