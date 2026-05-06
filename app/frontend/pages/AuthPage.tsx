@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { FormEvent } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import Layout from "../components/Layout"
 import Button from "../components/Button"
@@ -171,6 +171,14 @@ function AuthPage() {
           <Button variant="primary" fullWidth type="submit" disabled={loading} className="mt-2">
             {loading ? "送信中..." : mode === "login" ? "ここに誓う" : "誓約を交わす"}
           </Button>
+
+          {mode === "login" && (
+            <p className="mt-3 text-center text-xs">
+              <Link to="/forgot-password" className="text-ink/60 hover:text-seal">
+                パスワードを忘れた方
+              </Link>
+            </p>
+          )}
         </form>
       </div>
     </Layout>

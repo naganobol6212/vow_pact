@@ -3,6 +3,11 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # 開発時の送信メール確認 UI（本番では mount しない）
+  if Rails.env.development?
+    mount LetterOpenerWeb::Engine, at: "/letter_opener"
+  end
+
   # API ルート
   namespace :api do
     namespace :v1 do
@@ -18,6 +23,10 @@ Rails.application.routes.draw do
         post   "guest",    to: "guests#create"
         # ゲスト → 本登録ユーザーへの昇格（既存データを引き継ぐ）
         patch  "promote",  to: "promotions#update"
+        # パスワード再設定（メール経由）
+        post  "password_resets",        to: "password_resets#create"
+        get   "password_resets/:token", to: "password_resets#show",   as: :show_password_reset
+        patch "password_resets/:token", to: "password_resets#update", as: :update_password_reset
       end
 
       resources :pacts, only: [ :index, :create, :show, :update, :destroy ] do
@@ -39,8 +48,9 @@ Rails.application.routes.draw do
   end
 
   root "home#index"
-  get "*path", to: "home#index", constraints: ->(req) { !req.path.start_with?("/api",
-  "/up", "/rails") }
+  get "*path", to: "home#index", constraints: ->(req) {
+    !req.path.start_with?("/api", "/up", "/rails", "/letter_opener")
+  }
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
