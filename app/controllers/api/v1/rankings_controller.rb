@@ -31,13 +31,13 @@ module Api
 
       # GET /api/v1/rankings/streak
       # users.streak_count による連続日数ランキング。
+      # 「契約を 1 件以上持つ public ユーザー」が母集団。
+      # 0 日のユーザーも含めて表示する（契約直後でも順位を見える化するため）。
       def streak
-        # streak_count = 0 のユーザーは除外（圏外なので一覧に出さない）。
-        public_users = User.where(is_public: true)
-                           .where("streak_count > 0")
-                           .order(streak_count: :desc, updated_at: :asc, id: :asc)
-                           # TOP_LIMIT 件 + α を取れば、同点タイ用に余裕を持って取れる。
-                           .limit(TOP_LIMIT * 2)
+        public_users = ranking_candidate_users
+                         .order(streak_count: :desc, updated_at: :asc, id: :asc)
+                         # TOP_LIMIT 件 + α を取れば、同点タイ用に余裕を持って取れる。
+                         .limit(TOP_LIMIT * 2)
 
         rankings = []
         last_score = nil
@@ -61,11 +61,12 @@ module Api
       private
 
       def build_monthly_rankings(scores)
-        users = User.where(is_public: true, id: scores.keys).index_by(&:id)
-        sorted = scores
-                 .select { |uid, _| users.key?(uid) }
-                 .map { |uid, count| [ users[uid], count ] }
-                 .sort_by { |u, count| [ -count, u.updated_at, u.id ] }
+        # 母集団: 契約を 1 件以上持つ public ユーザー。達成 0 件でも母集団に含めて表示する。
+        candidates = ranking_candidate_users.index_by(&:id)
+
+        sorted = candidates.values
+                           .map { |u| [ u, scores[u.id] || 0 ] }
+                           .sort_by { |u, count| [ -count, u.updated_at, u.id ] }
 
         rankings = []
         last_score = nil
@@ -82,29 +83,44 @@ module Api
         rankings
       end
 
-      def build_monthly_my_rank(scores, rankings)
+      def build_monthly_my_rank(scores, _rankings)
         my_count = scores[Current.user.id] || 0
-        # 自分の順位は「自分より高い score を持つ public users + 自分」で計算
-        higher = User.where(is_public: true)
-                     .where.not(id: Current.user.id)
-                     .where(id: scores.select { |_, c| c > my_count }.keys)
-                     .count
-        my_rank_value = higher + 1
-
-        # 自分が圏外なら my_rank.rank は nil
-        my_rank_value = nil if my_count.zero? && rankings.none? { |r| r[:user][:id] == Current.user.id }
+        my_rank_value =
+          if current_user_in_scope?
+            # 自分より高い score を持つ public + pact 持ちユーザーの数 + 1
+            higher = ranking_candidate_users
+                       .where.not(id: Current.user.id)
+                       .where(id: scores.select { |_, c| c > my_count }.keys)
+                       .count
+            higher + 1
+          end
 
         { rank: my_rank_value, achievement_count: my_count }
       end
 
       def build_streak_my_rank
         my_streak = Current.user.streak_count
-        higher = User.where(is_public: true)
-                     .where.not(id: Current.user.id)
-                     .where("streak_count > ?", my_streak)
-                     .count
-        my_rank_value = my_streak.zero? ? nil : higher + 1
+        my_rank_value =
+          if current_user_in_scope?
+            higher = ranking_candidate_users
+                       .where.not(id: Current.user.id)
+                       .where("streak_count > ?", my_streak)
+                       .count
+            higher + 1
+          end
+
         { rank: my_rank_value, streak_count: my_streak }
+      end
+
+      # ランキング母集団: 契約を 1 件以上持つ public ユーザー。
+      # SELECT DISTINCT を使うと order(streak_count) と整合しないため、サブクエリで絞り込む。
+      def ranking_candidate_users
+        User.where(is_public: true).where(id: Pact.select(:user_id))
+      end
+
+      # ログイン中のユーザーがランキング表示対象に入るか
+      def current_user_in_scope?
+        Current.user.is_public && Current.user.pacts.exists?
       end
 
       def user_summary(u)

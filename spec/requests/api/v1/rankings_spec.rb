@@ -18,6 +18,13 @@ RSpec.describe "Api::V1::Rankings", type: :request do
     p
   end
 
+  # validation skip で pact を作るヘルパー（ランキング母集団に含めるため）
+  def make_active_pact(user:)
+    p = build(:pact, user: user)
+    p.save!(validate: false)
+    p
+  end
+
   describe "GET /api/v1/rankings/monthly" do
     let!(:public_user_a) { create(:user, email: "a@example.com", nickname: "A", is_public: true) }
     let!(:public_user_b) { create(:user, email: "b@example.com", nickname: "B", is_public: true) }
@@ -100,24 +107,57 @@ RSpec.describe "Api::V1::Rankings", type: :request do
 
         get "/api/v1/rankings/monthly"
         list = response.parsed_body["rankings"]
-        # 自分（me）は 0 件なので含まれない。15 ユーザー中上位 10。
+        # me は Pact.delete_all で pact が無くなるため母集団外。15 ユーザー中上位 10。
         expect(list.size).to eq(10)
         expect(list.first["achievement_count"]).to eq(15)
         expect(list.last["achievement_count"]).to eq(6)
+      end
+    end
+
+    context "母集団: 契約を持つ public ユーザー" do
+      it "達成 0 件でも、契約を 1 件以上持つ public ユーザーは母集団に含まれる" do
+        Pact.delete_all
+        u_zero = create(:user, email: "zeroa@example.com", nickname: "ZeroA", is_public: true)
+        make_active_pact(user: u_zero) # active な pact のみ（completed なし）
+
+        get "/api/v1/rankings/monthly"
+        list = response.parsed_body["rankings"]
+        ids = list.map { |r| r["user"]["id"] }
+        expect(ids).to include(u_zero.id)
+        zero_entry = list.find { |r| r["user"]["id"] == u_zero.id }
+        expect(zero_entry["achievement_count"]).to eq(0)
+      end
+
+      it "契約を 1 件も持たない public ユーザーは母集団から除外される" do
+        Pact.delete_all
+        u_no_pact = create(:user, email: "noptm@example.com", nickname: "NoPactM", is_public: true)
+
+        get "/api/v1/rankings/monthly"
+        ids = response.parsed_body["rankings"].map { |r| r["user"]["id"] }
+        expect(ids).not_to include(u_no_pact.id)
       end
     end
   end
 
   describe "GET /api/v1/rankings/streak" do
     let!(:user_streak_10) do
-      create(:user, email: "s10@example.com", nickname: "S10", is_public: true, streak_count: 10)
+      u = create(:user, email: "s10@example.com", nickname: "S10", is_public: true, streak_count: 10)
+      make_active_pact(user: u)
+      u
     end
     let!(:user_streak_20) do
-      create(:user, email: "s20@example.com", nickname: "S20", is_public: true, streak_count: 20)
+      u = create(:user, email: "s20@example.com", nickname: "S20", is_public: true, streak_count: 20)
+      make_active_pact(user: u)
+      u
     end
     let!(:user_streak_15_private) do
-      create(:user, email: "p15@example.com", nickname: "P15", is_public: false, streak_count: 15)
+      u = create(:user, email: "p15@example.com", nickname: "P15", is_public: false, streak_count: 15)
+      make_active_pact(user: u)
+      u
     end
+
+    # me（streak_count: 5、is_public: true）にも pact を 1 件付与（母集団に入れるため）
+    before { make_active_pact(user: me) }
 
     it "200 OK で rankings 配列と my_rank を返す" do
       get "/api/v1/rankings/streak"
@@ -156,11 +196,13 @@ RSpec.describe "Api::V1::Rankings", type: :request do
 
     context "dense rank / タイブレーク / TOP_LIMIT 仕様" do
       it "streak_count 同点は dense rank で同順位、updated_at asc → id asc で並ぶ" do
-        # 既存ユーザーは別スコアなので、新規に同点ユーザーを 2 人作る
+        # 既存ユーザーは別スコアなので、新規に同点ユーザーを 2 人作る（pact 必須）
         u_old = create(:user, email: "tiel@example.com", nickname: "TieOld",
                               is_public: true, streak_count: 7, updated_at: 2.days.ago)
         u_new = create(:user, email: "tien@example.com", nickname: "TieNew",
                               is_public: true, streak_count: 7, updated_at: 1.day.ago)
+        make_active_pact(user: u_old)
+        make_active_pact(user: u_new)
 
         get "/api/v1/rankings/streak"
         list = response.parsed_body["rankings"]
@@ -171,10 +213,11 @@ RSpec.describe "Api::V1::Rankings", type: :request do
       end
 
       it "上位 10 件まで表示" do
-        # 既存ユーザーをクリアしないので 15 人分追加
+        # 既存ユーザーをクリアしないので 15 人分追加（全員 pact を持つ）
         15.times do |i|
-          create(:user, email: "us#{i}@example.com", nickname: "US#{i}",
-                        is_public: true, streak_count: 100 + i)
+          u = create(:user, email: "us#{i}@example.com", nickname: "US#{i}",
+                            is_public: true, streak_count: 100 + i)
+          make_active_pact(user: u)
         end
 
         get "/api/v1/rankings/streak"
@@ -183,14 +226,28 @@ RSpec.describe "Api::V1::Rankings", type: :request do
         # 一番大きい streak（100+14=114）が 1 位
         expect(list.first["streak_count"]).to eq(114)
       end
+    end
 
-      it "streak_count = 0 のユーザーは rankings に含まれない（圏外）" do
-        create(:user, email: "zero@example.com", nickname: "Zero",
-                      is_public: true, streak_count: 0)
+    context "母集団: 契約を持つ public ユーザー" do
+      it "streak_count = 0 でも、契約を 1 件以上持っていれば母集団に含まれる" do
+        u_zero = create(:user, email: "zerost@example.com", nickname: "ZeroSt",
+                                is_public: true, streak_count: 0)
+        make_active_pact(user: u_zero)
 
         get "/api/v1/rankings/streak"
-        ranked_streaks = response.parsed_body["rankings"].map { |r| r["streak_count"] }
-        expect(ranked_streaks).not_to include(0)
+        ids = response.parsed_body["rankings"].map { |r| r["user"]["id"] }
+        expect(ids).to include(u_zero.id)
+        zero_entry = response.parsed_body["rankings"].find { |r| r["user"]["id"] == u_zero.id }
+        expect(zero_entry["streak_count"]).to eq(0)
+      end
+
+      it "契約を 1 件も持たない public ユーザーは母集団から除外される" do
+        u_no_pact = create(:user, email: "nopst@example.com", nickname: "NoPactSt",
+                                  is_public: true, streak_count: 50)
+
+        get "/api/v1/rankings/streak"
+        ids = response.parsed_body["rankings"].map { |r| r["user"]["id"] }
+        expect(ids).not_to include(u_no_pact.id)
       end
     end
   end
