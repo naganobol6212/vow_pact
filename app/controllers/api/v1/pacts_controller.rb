@@ -2,12 +2,13 @@ module Api
   module V1
     class PactsController < Api::V1::BaseController
       def index
-        pacts = Current.user.pacts.order(created_at: :desc)
+        # crest を eager load して N+1 を回避（紋章ギャラリーで参照される）
+        pacts = Current.user.pacts.includes(:crest).order(created_at: :desc)
         render json: PactSerializer.new(pacts).serializable_hash, status: :ok
       end
 
       def show
-        pact = Current.user.pacts.find(params[:id])
+        pact = Current.user.pacts.includes(:crest).find(params[:id])
         render json: PactSerializer.new(pact).serializable_hash, status: :ok
       end
 
