@@ -10,9 +10,28 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_05_120723) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_06_040745) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "ai_generations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.integer "generation_type", null: false
+    t.jsonb "input_data", default: {}, null: false
+    t.integer "latency_ms"
+    t.string "model", null: false
+    t.jsonb "output_data", default: {}, null: false
+    t.bigint "pact_id"
+    t.integer "status", null: false
+    t.integer "tokens_used"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["generation_type"], name: "index_ai_generations_on_generation_type"
+    t.index ["pact_id"], name: "index_ai_generations_on_pact_id"
+    t.index ["user_id", "created_at"], name: "index_ai_generations_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_ai_generations_on_user_id"
+  end
 
   create_table "check_ins", force: :cascade do |t|
     t.date "checked_on", null: false
@@ -67,6 +86,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_05_120723) do
     t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true
   end
 
+  add_foreign_key "ai_generations", "pacts"
+  add_foreign_key "ai_generations", "users"
   add_foreign_key "check_ins", "pacts"
   add_foreign_key "pacts", "users"
   add_foreign_key "sessions", "users"
