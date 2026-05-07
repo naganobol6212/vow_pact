@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import Layout from "../components/Layout"
 import Button from "../components/Button"
+import Modal from "../components/Modal"
 import { api, ApiError } from "../lib/api"
 import type { Pact } from "../types/pact"
 import type { CheckIn, CheckInStatus } from "../types/check_in"
@@ -148,13 +149,10 @@ function PactDetailPage() {
                 <Button variant="ghost" type="button" onClick={() => setEditOpen(true)}>
                   編集
                 </Button>
-                <button
-                  type="button"
-                  onClick={() => setDeleteOpen(true)}
-                  className="px-6 py-3 font-serif font-bold rounded-lg border border-red-700 text-red-700 transition hover:bg-red-700/10 active:bg-red-700/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700/40 focus-visible:ring-offset-2 focus-visible:ring-offset-parchment"
-                >
+                {/* 入り口ボタンは ghost で控えめに。実際の破棄コミットは確認ダイアログ内で destructive を使う。 */}
+                <Button variant="ghost" type="button" onClick={() => setDeleteOpen(true)}>
                   破棄
-                </button>
+                </Button>
               </div>
             </section>
           )}
@@ -361,9 +359,12 @@ function EditPactModal({ pact, onClose }: { pact: Pact; onClose: () => void }) {
         method: "PATCH",
         body: { goal: goal.trim(), constraint_text: constraintText.trim() },
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pact", String(pact.id)] })
-      queryClient.invalidateQueries({ queryKey: ["pacts"] })
+    onSuccess: async () => {
+      // 既存パターン（checkInMutation / PublicToggle）と挙動を揃えるため、
+      // invalidate を await してからモーダルを閉じる。閉じた直後に古いデータが
+      // チラ見えするのを避ける。
+      await queryClient.invalidateQueries({ queryKey: ["pact", String(pact.id)] })
+      await queryClient.invalidateQueries({ queryKey: ["pacts"] })
       onClose()
     },
     onError: (err) => {
@@ -384,68 +385,57 @@ function EditPactModal({ pact, onClose }: { pact: Pact; onClose: () => void }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="edit-pact-title"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md rounded-lg border-2 border-gold bg-parchment p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 id="edit-pact-title" className="font-serif text-xl text-seal mb-4">
-          契約を編集する
-        </h2>
-        <form onSubmit={handleSave} className="space-y-4">
-          <div>
-            <label htmlFor="edit-goal" className="block text-xs text-ink/70 mb-1">
-              目標
-            </label>
-            <textarea
-              id="edit-goal"
-              value={goal}
-              onChange={(e) => setGoal(e.target.value)}
-              maxLength={500}
-              rows={2}
-              className="w-full px-3 py-2 bg-parchment border border-ink/30 rounded-sm text-sm focus:border-seal focus:outline-none"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="edit-constraint" className="block text-xs text-ink/70 mb-1">
-              制約
-            </label>
-            <textarea
-              id="edit-constraint"
-              value={constraintText}
-              onChange={(e) => setConstraintText(e.target.value)}
-              maxLength={500}
-              rows={2}
-              className="w-full px-3 py-2 bg-parchment border border-ink/30 rounded-sm text-sm focus:border-seal focus:outline-none"
-              required
-            />
-          </div>
-          <p className="text-xs text-ink/50">
-            ※ 期日 / 難易度 / 締結日は契約時に確定したため変更できません。
+    <Modal onClose={onClose} labelledBy="edit-pact-title" disableClose={mutation.isPending}>
+      <h2 id="edit-pact-title" className="font-serif text-xl text-seal mb-4">
+        契約を編集する
+      </h2>
+      <form onSubmit={handleSave} className="space-y-4">
+        <div>
+          <label htmlFor="edit-goal" className="block text-xs text-ink/70 mb-1">
+            目標
+          </label>
+          <textarea
+            id="edit-goal"
+            value={goal}
+            onChange={(e) => setGoal(e.target.value)}
+            maxLength={500}
+            rows={2}
+            className="w-full px-3 py-2 bg-parchment border border-ink/30 rounded-sm text-sm focus:border-seal focus:outline-none"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="edit-constraint" className="block text-xs text-ink/70 mb-1">
+            制約
+          </label>
+          <textarea
+            id="edit-constraint"
+            value={constraintText}
+            onChange={(e) => setConstraintText(e.target.value)}
+            maxLength={500}
+            rows={2}
+            className="w-full px-3 py-2 bg-parchment border border-ink/30 rounded-sm text-sm focus:border-seal focus:outline-none"
+            required
+          />
+        </div>
+        <p className="text-xs text-ink/50">
+          ※ 期日 / 難易度 / 締結日は契約時に確定したため変更できません。
+        </p>
+        {error && (
+          <p className="text-xs text-seal" role="alert">
+            {error}
           </p>
-          {error && (
-            <p className="text-xs text-seal" role="alert">
-              {error}
-            </p>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" type="button" onClick={onClose} disabled={mutation.isPending}>
-              キャンセル
-            </Button>
-            <Button variant="primary" type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "保存中…" : "保存"}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" type="button" onClick={onClose} disabled={mutation.isPending}>
+            キャンセル
+          </Button>
+          <Button variant="primary" type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? "保存中…" : "保存"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   )
 }
 
@@ -463,9 +453,10 @@ function DeleteConfirmDialog({ pact, onClose }: { pact: Pact; onClose: () => voi
     mutationFn: async () => {
       await api(`/pacts/${pact.id}`, { method: "DELETE" })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pact", String(pact.id)] })
-      queryClient.invalidateQueries({ queryKey: ["pacts"] })
+    onSuccess: async () => {
+      // 既存パターンと挙動を揃えるため、invalidate を await してから navigate する。
+      await queryClient.invalidateQueries({ queryKey: ["pact", String(pact.id)] })
+      await queryClient.invalidateQueries({ queryKey: ["pacts"] })
       navigate("/pacts", { replace: true })
     },
     onError: (err) => {
@@ -476,46 +467,35 @@ function DeleteConfirmDialog({ pact, onClose }: { pact: Pact; onClose: () => voi
   })
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="delete-pact-title"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md rounded-lg border-2 border-gold bg-parchment p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 id="delete-pact-title" className="font-serif text-xl text-seal mb-3">
-          この契約を破棄しますか？
-        </h2>
-        <p className="text-sm text-ink/70 mb-2">
-          目標：<span className="text-ink">{pact.goal}</span>
+    <Modal onClose={onClose} labelledBy="delete-pact-title" disableClose={mutation.isPending}>
+      <h2 id="delete-pact-title" className="font-serif text-xl text-seal mb-3">
+        この契約を破棄しますか？
+      </h2>
+      <p className="text-sm text-ink/70 mb-2">
+        目標：<span className="text-ink">{pact.goal}</span>
+      </p>
+      <p className="text-xs text-ink/60 mb-4">
+        破棄した契約は契約一覧から消え、紋章ももう得られません。一度破棄すると元に戻せません。
+      </p>
+      {error && (
+        <p className="text-xs text-seal mb-3" role="alert">
+          {error}
         </p>
-        <p className="text-xs text-ink/60 mb-4">
-          破棄した契約は契約一覧から消え、紋章ももう得られません。一度破棄すると元に戻せません。
-        </p>
-        {error && (
-          <p className="text-xs text-seal mb-3" role="alert">
-            {error}
-          </p>
-        )}
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" type="button" onClick={onClose} disabled={mutation.isPending}>
-            キャンセル
-          </Button>
-          <button
-            type="button"
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
-            className="px-6 py-3 font-serif font-bold rounded-lg bg-red-700 text-parchment shadow-md transition hover:brightness-110 active:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700/40 focus-visible:ring-offset-2 focus-visible:ring-offset-parchment"
-          >
-            {mutation.isPending ? "破棄中…" : "破棄する"}
-          </button>
-        </div>
+      )}
+      <div className="flex justify-end gap-2">
+        <Button variant="ghost" type="button" onClick={onClose} disabled={mutation.isPending}>
+          キャンセル
+        </Button>
+        <Button
+          variant="destructive"
+          type="button"
+          onClick={() => mutation.mutate()}
+          disabled={mutation.isPending}
+        >
+          {mutation.isPending ? "破棄中…" : "破棄する"}
+        </Button>
       </div>
-    </div>
+    </Modal>
   )
 }
 
