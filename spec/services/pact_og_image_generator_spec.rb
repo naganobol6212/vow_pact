@@ -62,6 +62,32 @@ RSpec.describe PactOgImageGenerator, type: :service do
         expect(svg).to include("成就")
       end
     end
+
+    context "title が設定されている場合" do
+      let(:pact) { build_pact(title: "沈黙の試練を背負いし者") }
+      subject(:svg) { described_class.new(pact).to_svg }
+
+      it "TITLE GRANTED ラベルと称号本文を描画する" do
+        expect(svg).to include("TITLE GRANTED")
+        expect(svg).to include("沈黙の試練を背負いし者")
+      end
+
+      it "title 内の特殊文字（&, <, >）はエスケープされる" do
+        pact.title = "AI &amp; Sword <hero>"
+        pact.save!(validate: false)
+        out = described_class.new(pact).to_svg
+        expect(out).to include("AI &amp;amp; Sword &lt;hero&gt;")
+      end
+    end
+
+    context "title が未設定の場合" do
+      let(:pact) { build_pact(title: nil) }
+      subject(:svg) { described_class.new(pact).to_svg }
+
+      it "TITLE GRANTED ラベルは描画されない" do
+        expect(svg).not_to include("TITLE GRANTED")
+      end
+    end
   end
 
   describe "#to_png" do

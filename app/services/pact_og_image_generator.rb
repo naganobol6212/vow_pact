@@ -51,47 +51,50 @@ class PactOgImageGenerator
         <rect x="48" y="48" width="#{WIDTH - 96}" height="#{HEIGHT - 96}" fill="none" stroke="#{COLOR_GOLD}" stroke-width="1" stroke-opacity="0.5"/>
 
         <!-- 中央上のシール（円 + シンボル） -->
-        <circle cx="#{WIDTH / 2}" cy="110" r="55" fill="#{COLOR_SEAL}" fill-opacity="0.1"
+        <circle cx="#{WIDTH / 2}" cy="100" r="48" fill="#{COLOR_SEAL}" fill-opacity="0.1"
                 stroke="#{COLOR_GOLD}" stroke-width="3"/>
-        <text x="#{WIDTH / 2}" y="135" text-anchor="middle" font-size="60">#{seal_symbol}</text>
+        <text x="#{WIDTH / 2}" y="120" text-anchor="middle" font-size="52">#{seal_symbol}</text>
 
         <!-- ヘッドライン: fill は style でも明示する（rsvg-convert の一部環境で
              attribute fill より style fill の方が確実に効くケースがあるため） -->
-        <text x="#{WIDTH / 2}" y="220" text-anchor="middle"
+        <text x="#{WIDTH / 2}" y="195" text-anchor="middle"
               font-family="'Noto Serif JP', 'Hiragino Mincho ProN', serif"
-              font-size="48" font-weight="bold"
+              font-size="42" font-weight="bold"
               fill="#{COLOR_SEAL}" style="fill:#{COLOR_SEAL};">#{headline}</text>
 
         <!-- サブタイトル -->
-        <text x="#{WIDTH / 2}" y="280" text-anchor="middle"
+        <text x="#{WIDTH / 2}" y="240" text-anchor="middle"
               font-family="'Noto Serif JP', 'Hiragino Mincho ProN', serif"
-              font-size="22"
+              font-size="20"
               fill="#{COLOR_INK}" fill-opacity="0.7" style="fill:#{COLOR_INK};fill-opacity:0.7;">#{subtitle}</text>
 
+        <!-- 称号バナー（pact.title が存在するときのみ） -->
+        #{title_banner_svg}
+
         <!-- 契約書ボックス -->
-        <rect x="80" y="340" width="#{WIDTH - 160}" height="240" rx="12"
+        <rect x="80" y="370" width="#{WIDTH - 160}" height="210" rx="12"
               fill="#{COLOR_PARCHMENT}" stroke="#{COLOR_GOLD}" stroke-width="2"/>
 
         <!-- 目標 -->
-        <text x="100" y="370" font-family="'Noto Serif JP', serif" font-size="20"
+        <text x="100" y="395" font-family="'Noto Serif JP', serif" font-size="18"
               fill="#{COLOR_INK}" fill-opacity="0.6">目標</text>
-        #{wrap_text(@pact.goal, x: 100, y: 405, width: 1000, font_size: 32, color: COLOR_INK, max_lines: 1)}
+        #{wrap_text(@pact.goal, x: 100, y: 428, width: 1000, font_size: 28, color: COLOR_INK, max_lines: 1)}
 
         <!-- 制約 -->
-        <text x="100" y="450" font-family="'Noto Serif JP', serif" font-size="20"
+        <text x="100" y="465" font-family="'Noto Serif JP', serif" font-size="18"
               fill="#{COLOR_INK}" fill-opacity="0.6">制約</text>
-        #{wrap_text(@pact.constraint_text, x: 100, y: 485, width: 1000, font_size: 26, color: COLOR_INK, max_lines: 1)}
+        #{wrap_text(@pact.constraint_text, x: 100, y: 498, width: 1000, font_size: 24, color: COLOR_INK, max_lines: 1)}
 
         <!-- 期日 -->
-        <text x="100" y="525" font-family="'Noto Serif JP', serif" font-size="20"
+        <text x="100" y="535" font-family="'Noto Serif JP', serif" font-size="18"
               fill="#{COLOR_INK}" fill-opacity="0.6">期日</text>
-        <text x="100" y="560" font-family="'Noto Serif JP', serif" font-size="28"
+        <text x="100" y="565" font-family="'Noto Serif JP', serif" font-size="26"
               fill="#{COLOR_INK}">#{@pact.deadline}</text>
 
         <!-- 難易度 -->
-        <text x="600" y="525" font-family="'Noto Serif JP', serif" font-size="20"
+        <text x="600" y="535" font-family="'Noto Serif JP', serif" font-size="18"
               fill="#{COLOR_INK}" fill-opacity="0.6">難易度</text>
-        <text x="600" y="560" font-family="'Noto Serif JP', serif" font-size="28">
+        <text x="600" y="565" font-family="'Noto Serif JP', serif" font-size="26">
           #{difficulty_marks_svg}
         </text>
 
@@ -196,6 +199,28 @@ class PactOgImageGenerator
   def difficulty_marks
     n = [ [ @pact.difficulty.to_i, 0 ].max, 5 ].min
     ("⚔" * n) + ("⚔" * (5 - n))
+  end
+
+  # 称号バナー（TITLE GRANTED + 称号）。pact.title が無い場合は何も描画しない。
+  # サブタイトルと契約書ボックスの間（y: 270-355）に配置する。
+  def title_banner_svg
+    return "" if @pact.title.blank?
+
+    title_text = @pact.title.to_s.gsub("&", "&amp;").gsub("<", "&lt;").gsub(">", "&gt;")
+    <<~SVG
+      <g>
+        <rect x="350" y="280" width="500" height="60" rx="2"
+              fill="rgba(201,169,97,0.10)" stroke="#{COLOR_GOLD}" stroke-width="1.2"/>
+        <text x="#{WIDTH / 2}" y="300" text-anchor="middle"
+              font-family="'Cormorant Garamond', serif" font-size="11"
+              fill="#{COLOR_GOLD}" letter-spacing="6"
+              style="fill:#{COLOR_GOLD};">TITLE GRANTED</text>
+        <text x="#{WIDTH / 2}" y="328" text-anchor="middle"
+              font-family="'Noto Serif JP', 'Hiragino Mincho ProN', serif"
+              font-size="22" font-weight="bold"
+              fill="#{COLOR_INK}" style="fill:#{COLOR_INK};">#{title_text}</text>
+      </g>
+    SVG
   end
 
   # SignedPage と同じく「⚔ × n（seal）+ ⚔ × (5-n)（薄墨） {n}/5」を tspan で色分け表示。

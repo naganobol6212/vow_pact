@@ -30,6 +30,11 @@ Rails.application.routes.draw do
       end
 
       resources :pacts, only: [ :index, :create, :show, :update, :destroy ] do
+        # 称号生成: AI で称号案を生成 → 1 つ採用 → pact.title に保存 → Pact を返す。
+        # 既に title が設定済みなら再生成しない（idempotent）。
+        member do
+          post :title, action: :generate_title
+        end
         # ネストしたチェックイン（必ず特定 pact 配下）
         resources :check_ins, only: [ :index, :create, :destroy ]
       end

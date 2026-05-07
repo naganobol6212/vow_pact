@@ -121,6 +121,25 @@ function PactDetailPage() {
             </span>
           </div>
 
+          {/* 称号（締結時に AI で自動付与される）*/}
+          {pact.title && (
+            <section className="mb-4 px-4 py-3 border border-gold/60 bg-gold/5 text-center">
+              <p className="text-[10px] tracking-[0.4em] text-gold font-serif font-semibold mb-1">
+                TITLE GRANTED
+              </p>
+              <p className="font-serif text-sm sm:text-base font-semibold text-ink tracking-wider">
+                {pact.title.endsWith("者") ? (
+                  <>
+                    {pact.title.slice(0, -1)}
+                    <span className="text-seal">者</span>
+                  </>
+                ) : (
+                  pact.title
+                )}
+              </p>
+            </section>
+          )}
+
           <section className="mb-3">
             <p className="text-xs text-ink/60 font-serif">制約</p>
             <p className="text-sm text-ink">{pact.constraint_text}</p>
