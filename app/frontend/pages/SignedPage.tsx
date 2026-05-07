@@ -48,6 +48,25 @@ function SignedPage() {
     },
   })
 
+  // 称号自動生成。pact.title が nil のときに 1 度だけ叩く（サーバ側も idempotent）。
+  // サーバ側で AI 生成 → 1 つ採用 → pact.title に保存 → 更新後の Pact を返す。
+  const titleMutation = useMutation<Pact, ApiError, void>({
+    mutationFn: () => api<Pact>(`/pacts/${id}/title`, { method: "POST" }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["pact", id], updated)
+      queryClient.invalidateQueries({ queryKey: ["pacts"] })
+    },
+  })
+
+  // 取得した pact に title が無ければ 1 度だけ生成を要求する。
+  // titleMutation が pending / completed / errored の間は再呼び出ししない。
+  useEffect(() => {
+    if (!pact) return
+    if (pact.title) return
+    if (titleMutation.isPending || titleMutation.isSuccess || titleMutation.isError) return
+    titleMutation.mutate()
+  }, [pact, titleMutation])
+
   // OG image PNG を先取りフェッチして Rails.cache（Solid Cache）を温める。
   // Render Free tier では初回生成に 10 秒以上かかるため、ユーザーが SignedPage を見ている間に
   // 裏で生成完了させておく。シェアボタン押下後に X クローラーが来たときには cache hit するので
@@ -112,6 +131,46 @@ function SignedPage() {
         >
           {subtitle}
         </motion.p>
+
+        {/* 称号カード（TITLE GRANTED） — 金枠で「授かりもの」感を出す。
+            pact.title が来るまでは生成中の placeholder を出す。 */}
+        <motion.div
+          className="relative mb-8 px-5 pt-6 pb-5 text-center bg-linear-to-b from-gold/10 to-gold/0 border border-gold"
+          style={{ outline: "1px solid rgba(201,169,97,0.33)", outlineOffset: "-5px" }}
+          {...fadeUp}
+          transition={{ duration: 0.6, delay: 0.95 }}
+          aria-label="授かりし称号"
+          role="figure"
+        >
+          <span
+            className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-parchment px-3 text-[10px] tracking-[0.5em] text-gold font-serif font-semibold whitespace-nowrap"
+            style={{ paddingLeft: "calc(0.75rem + 0.5em)" }}
+          >
+            TITLE GRANTED
+          </span>
+          <div className="flex justify-center mb-2">
+            <span className="text-gold text-sm">✦</span>
+          </div>
+          {pact.title ? (
+            <p
+              className="font-serif font-semibold text-ink text-xl sm:text-2xl tracking-wider"
+              style={{ lineHeight: 1.5 }}
+            >
+              {pact.title.endsWith("者") ? (
+                <>
+                  {pact.title.slice(0, -1)}
+                  <span className="text-seal">者</span>
+                </>
+              ) : (
+                pact.title
+              )}
+            </p>
+          ) : (
+            <p className="font-serif text-ink/50 text-sm">
+              {titleMutation.isError ? "称号の授与に失敗しました" : "称号を授かっています…"}
+            </p>
+          )}
+        </motion.div>
 
         {/* 契約サマリ */}
         <motion.div

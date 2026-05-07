@@ -31,6 +31,27 @@ module Api
         head :no_content
       end
 
+      # POST /api/v1/pacts/:id/title
+      # 称号を AI で生成して pact.title に保存し、更新後の Pact を返す。
+      # 既に title が設定されている場合は再生成しない（idempotent）。
+      # クライアントが任意の文字列を渡して上書きする経路を用意せず、必ずサーバ側で生成する。
+      def generate_title
+        pact = Current.user.pacts.find(params[:id])
+        if pact.title.blank?
+          titles = ::Ai::Logger.call(
+            user: Current.user,
+            type: :title_generation,
+            model: "gpt-5.4-nano",
+            input: { "goal" => pact.goal, "difficulty" => pact.difficulty }
+          ) do
+            ::Ai::TitleGenerator.new.generate(goal: pact.goal, difficulty: pact.difficulty)
+          end
+          chosen = Array(titles).first
+          pact.update!(title: chosen) if chosen.present?
+        end
+        render json: PactSerializer.new(pact).serializable_hash, status: :ok
+      end
+
       private
 
       # signed_at はクライアント値を許可しない（create 時にサーバ側で Time.current を merge）。

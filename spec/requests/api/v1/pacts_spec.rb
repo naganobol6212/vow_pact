@@ -254,4 +254,75 @@ RSpec.describe "Api::V1::Pacts", type: :request do
       end
     end
   end
+
+  describe "POST /api/v1/pacts/:id/title" do
+    let!(:my_pact) { create(:pact, user: user, goal: "毎日30分読書する", difficulty: 3, title: nil) }
+    let!(:other_user) { create(:user, email: "other@example.com") }
+    let!(:other_pact) { create(:pact, user: other_user, title: nil) }
+
+    before do
+      # AI 呼び出しは実 API を叩かないようモック
+      allow_any_instance_of(::Ai::TitleGenerator).to receive(:generate)
+        .and_return([ "沈黙の試練を背負いし者", "誓いの守人", "信念の継承者" ])
+    end
+
+    context "ログイン中で自分の契約に title が未設定の場合" do
+      before { post "/api/v1/auth/login", params: login_params, as: :json }
+
+      it "200 OK を返し、AI 生成された title の先頭を pact に保存する" do
+        post "/api/v1/pacts/#{my_pact.id}/title", as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body["title"]).to eq("沈黙の試練を背負いし者")
+        expect(my_pact.reload.title).to eq("沈黙の試練を背負いし者")
+      end
+
+      it "AiGeneration ログを 1 件作成する" do
+        expect {
+          post "/api/v1/pacts/#{my_pact.id}/title", as: :json
+        }.to change(AiGeneration, :count).by(1)
+
+        log = AiGeneration.last
+        expect(log.generation_type).to eq("title_generation")
+        expect(log.user_id).to eq(user.id)
+      end
+    end
+
+    context "title が既に設定済みの場合" do
+      let!(:titled_pact) { create(:pact, user: user, title: "既存の称号") }
+      before { post "/api/v1/auth/login", params: login_params, as: :json }
+
+      it "再生成せず、既存 title を維持する（idempotent）" do
+        post "/api/v1/pacts/#{titled_pact.id}/title", as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body["title"]).to eq("既存の称号")
+        expect(titled_pact.reload.title).to eq("既存の称号")
+      end
+
+      it "AI 生成を呼び出さない" do
+        expect_any_instance_of(::Ai::TitleGenerator).not_to receive(:generate)
+        post "/api/v1/pacts/#{titled_pact.id}/title", as: :json
+      end
+    end
+
+    context "他人の契約に対して呼ぼうとした場合" do
+      before { post "/api/v1/auth/login", params: login_params, as: :json }
+
+      it "404 Not Found を返し、保存しない" do
+        post "/api/v1/pacts/#{other_pact.id}/title", as: :json
+
+        expect(response).to have_http_status(:not_found)
+        expect(other_pact.reload.title).to be_nil
+      end
+    end
+
+    context "未ログインの場合" do
+      it "401 Unauthorized を返す" do
+        post "/api/v1/pacts/#{my_pact.id}/title", as: :json
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
 end
