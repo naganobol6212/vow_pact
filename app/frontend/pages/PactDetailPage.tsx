@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import Layout from "../components/Layout"
 import Button from "../components/Button"
+import Modal from "../components/Modal"
 import { api, ApiError } from "../lib/api"
 import type { Pact } from "../types/pact"
 import type { CheckIn, CheckInStatus } from "../types/check_in"
@@ -29,6 +30,8 @@ function PactDetailPage() {
   const queryClient = useQueryClient()
   const [note, setNote] = useState("")
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   const { data: pact, isLoading: isPactLoading, isError: isPactError } = useQuery<Pact, ApiError>({
     queryKey: ["pact", id],
@@ -137,7 +140,33 @@ function PactDetailPage() {
 
           {/* 公開設定 */}
           <PublicToggle pact={pact} />
+
+          {/* 操作（active な契約のみ） */}
+          {isActive && (
+            <section className="mt-4 pt-4 border-t border-gold/30">
+              <p className="text-sm text-ink font-bold mb-3">操作</p>
+              <div className="flex gap-2 flex-wrap">
+                <Button variant="ghost" type="button" onClick={() => setEditOpen(true)}>
+                  編集
+                </Button>
+                {/* 入り口ボタンは ghost で控えめに。実際の破棄コミットは確認ダイアログ内で destructive を使う。 */}
+                <Button variant="ghost" type="button" onClick={() => setDeleteOpen(true)}>
+                  破棄
+                </Button>
+              </div>
+            </section>
+          )}
         </div>
+
+        {/* 編集モーダル */}
+        {editOpen && (
+          <EditPactModal pact={pact} onClose={() => setEditOpen(false)} />
+        )}
+
+        {/* 削除確認ダイアログ */}
+        {deleteOpen && (
+          <DeleteConfirmDialog pact={pact} onClose={() => setDeleteOpen(false)} />
+        )}
 
         {/* 今日のチェックイン */}
         {isActive && (
@@ -309,6 +338,164 @@ function PublicToggle({ pact }: { pact: Pact }) {
         </div>
       )}
     </section>
+  )
+}
+
+// =====================================================================
+// 契約編集モーダル
+// =====================================================================
+// 編集可能な属性は goal / constraint_text のみ。
+// 期日 / 難易度 / 締結日は契約時に確定する設計（CLAUDE.md 7. 重要な設計判断）。
+
+function EditPactModal({ pact, onClose }: { pact: Pact; onClose: () => void }) {
+  const queryClient = useQueryClient()
+  const [goal, setGoal] = useState(pact.goal)
+  const [constraintText, setConstraintText] = useState(pact.constraint_text)
+  const [error, setError] = useState<string | null>(null)
+
+  const mutation = useMutation<Pact, ApiError, void>({
+    mutationFn: () =>
+      api<Pact>(`/pacts/${pact.id}`, {
+        method: "PATCH",
+        body: { goal: goal.trim(), constraint_text: constraintText.trim() },
+      }),
+    onSuccess: async () => {
+      // 既存パターン（checkInMutation / PublicToggle）と挙動を揃えるため、
+      // invalidate を await してからモーダルを閉じる。閉じた直後に古いデータが
+      // チラ見えするのを避ける。
+      await queryClient.invalidateQueries({ queryKey: ["pact", String(pact.id)] })
+      await queryClient.invalidateQueries({ queryKey: ["pacts"] })
+      onClose()
+    },
+    onError: (err) => {
+      const errors = Array.isArray(err.errors) ? err.errors : []
+      const firstError = errors[0] as { message?: string } | undefined
+      setError(firstError?.message ?? "編集に失敗しました")
+    },
+  })
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (goal.trim() === "" || constraintText.trim() === "") {
+      setError("目標と制約は必須です")
+      return
+    }
+    setError(null)
+    mutation.mutate()
+  }
+
+  return (
+    <Modal onClose={onClose} labelledBy="edit-pact-title" disableClose={mutation.isPending}>
+      <h2 id="edit-pact-title" className="font-serif text-xl text-seal mb-4">
+        契約を編集する
+      </h2>
+      <form onSubmit={handleSave} className="space-y-4">
+        <div>
+          <label htmlFor="edit-goal" className="block text-xs text-ink/70 mb-1">
+            目標
+          </label>
+          <textarea
+            id="edit-goal"
+            value={goal}
+            onChange={(e) => setGoal(e.target.value)}
+            maxLength={500}
+            rows={2}
+            className="w-full px-3 py-2 bg-parchment border border-ink/30 rounded-sm text-sm focus:border-seal focus:outline-none"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="edit-constraint" className="block text-xs text-ink/70 mb-1">
+            制約
+          </label>
+          <textarea
+            id="edit-constraint"
+            value={constraintText}
+            onChange={(e) => setConstraintText(e.target.value)}
+            maxLength={500}
+            rows={2}
+            className="w-full px-3 py-2 bg-parchment border border-ink/30 rounded-sm text-sm focus:border-seal focus:outline-none"
+            required
+          />
+        </div>
+        <p className="text-xs text-ink/50">
+          ※ 期日 / 難易度 / 締結日は契約時に確定したため変更できません。
+        </p>
+        {error && (
+          <p className="text-xs text-seal" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" type="button" onClick={onClose} disabled={mutation.isPending}>
+            キャンセル
+          </Button>
+          <Button variant="primary" type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? "保存中…" : "保存"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
+// =====================================================================
+// 契約破棄（削除）確認ダイアログ
+// =====================================================================
+// 論理削除：DB からは消さず status を abandoned に変更する（CLAUDE.md 7.）。
+
+function DeleteConfirmDialog({ pact, onClose }: { pact: Pact; onClose: () => void }) {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [error, setError] = useState<string | null>(null)
+
+  const mutation = useMutation<void, ApiError, void>({
+    mutationFn: async () => {
+      await api(`/pacts/${pact.id}`, { method: "DELETE" })
+    },
+    onSuccess: async () => {
+      // 既存パターンと挙動を揃えるため、invalidate を await してから navigate する。
+      await queryClient.invalidateQueries({ queryKey: ["pact", String(pact.id)] })
+      await queryClient.invalidateQueries({ queryKey: ["pacts"] })
+      navigate("/pacts", { replace: true })
+    },
+    onError: (err) => {
+      const errors = Array.isArray(err.errors) ? err.errors : []
+      const firstError = errors[0] as { message?: string } | undefined
+      setError(firstError?.message ?? "破棄に失敗しました")
+    },
+  })
+
+  return (
+    <Modal onClose={onClose} labelledBy="delete-pact-title" disableClose={mutation.isPending}>
+      <h2 id="delete-pact-title" className="font-serif text-xl text-seal mb-3">
+        この契約を破棄しますか？
+      </h2>
+      <p className="text-sm text-ink/70 mb-2">
+        目標：<span className="text-ink">{pact.goal}</span>
+      </p>
+      <p className="text-xs text-ink/60 mb-4">
+        破棄した契約は契約一覧から消え、紋章ももう得られません。一度破棄すると元に戻せません。
+      </p>
+      {error && (
+        <p className="text-xs text-seal mb-3" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="flex justify-end gap-2">
+        <Button variant="ghost" type="button" onClick={onClose} disabled={mutation.isPending}>
+          キャンセル
+        </Button>
+        <Button
+          variant="destructive"
+          type="button"
+          onClick={() => mutation.mutate()}
+          disabled={mutation.isPending}
+        >
+          {mutation.isPending ? "破棄中…" : "破棄する"}
+        </Button>
+      </div>
+    </Modal>
   )
 }
 
