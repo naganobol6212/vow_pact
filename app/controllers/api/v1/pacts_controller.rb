@@ -35,9 +35,18 @@ module Api
       # 称号を AI で生成して pact.title に保存し、更新後の Pact を返す。
       # 既に title が設定されている場合は再生成しない（idempotent）。
       # クライアントが任意の文字列を渡して上書きする経路を用意せず、必ずサーバ側で生成する。
+      #
+      # 同時実行対策:
+      #   blank? 判定と update! の間に同一 pact への別リクエストが入ると重複生成 + 重複ログが
+      #   発生し得るため、pact を行ロック（with_lock）してロック取得後に再判定する。
       def generate_title
         pact = Current.user.pacts.find(params[:id])
-        if pact.title.blank?
+        generation_failed = false
+
+        pact.with_lock do
+          # ロック取得後に最新状態で再判定。別リクエストが先に保存していればここでスキップ。
+          next if pact.title.present?
+
           titles = ::Ai::Logger.call(
             user: Current.user,
             type: :title_generation,
@@ -46,9 +55,28 @@ module Api
           ) do
             ::Ai::TitleGenerator.new.generate(goal: pact.goal, difficulty: pact.difficulty)
           end
+
           chosen = Array(titles).first
-          pact.update!(title: chosen) if chosen.present?
+          if chosen.blank?
+            # 失敗を 200 で隠蔽するとクライアントは title が出るまで待ち続けてしまうため、
+            # 明示的に 422 を返してクライアントにリトライ／フォールバックを判断させる。
+            generation_failed = true
+            next
+          end
+
+          pact.update!(title: chosen)
         end
+
+        if generation_failed
+          return render json: {
+            errors: [ {
+              code: "title_generation_failed",
+              field: "title",
+              message: I18n.t("errors.api.title_generation_failed", default: "称号を生成できませんでした。時間を置いて再度お試しください。")
+            } ]
+          }, status: :unprocessable_content
+        end
+
         render json: PactSerializer.new(pact).serializable_hash, status: :ok
       end
 

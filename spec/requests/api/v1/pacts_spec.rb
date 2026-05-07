@@ -324,5 +324,37 @@ RSpec.describe "Api::V1::Pacts", type: :request do
         expect(response).to have_http_status(:unauthorized)
       end
     end
+
+    context "AI が空配列を返した場合（生成失敗）" do
+      before do
+        allow_any_instance_of(::Ai::TitleGenerator).to receive(:generate).and_return([])
+        post "/api/v1/auth/login", params: login_params, as: :json
+      end
+
+      it "422 を返し、{ errors: [{ code, field, message }] } の形式でエラーを返す" do
+        post "/api/v1/pacts/#{my_pact.id}/title", as: :json
+
+        expect(response).to have_http_status(:unprocessable_content)
+        body = response.parsed_body
+        expect(body["errors"]).to be_an(Array)
+        expect(body["errors"][0]["code"]).to eq("title_generation_failed")
+        expect(body["errors"][0]["field"]).to eq("title")
+        expect(body["errors"][0]["message"]).to be_present
+      end
+
+      it "pact.title は nil のまま（隠蔽せず）" do
+        post "/api/v1/pacts/#{my_pact.id}/title", as: :json
+
+        expect(my_pact.reload.title).to be_nil
+      end
+
+      it "AiGeneration ログは status=success で 1 件記録する（呼び出し履歴は残す）" do
+        # 失敗通知は API レスポンスで行い、ログは「呼び出した記録」として残す。
+        # ロガー視点では block 自体は例外なく完了しているので status: :success。
+        expect {
+          post "/api/v1/pacts/#{my_pact.id}/title", as: :json
+        }.to change(AiGeneration, :count).by(1)
+      end
+    end
   end
 end
