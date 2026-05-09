@@ -26,20 +26,22 @@ RSpec.describe "/p/:id 公開契約シェアページ", type: :request do
         expect(response.media_type).to eq("text/html")
       end
 
-      it "og:image / twitter:card 等の OGP meta タグを HTML に直接埋め込む" do
+      it "OGP meta タグを HTML に直接埋め込む（動的 OG image は一時無効化中のため画像系 meta は出さない）" do
         get "/p/#{pact.id}"
         body = response.body
 
         # 主要 meta が存在すること
         expect(body).to include('property="og:title"')
         expect(body).to include('property="og:description"')
-        expect(body).to include('property="og:image"')
         expect(body).to include('property="og:url"')
         expect(body).to include('name="twitter:card"')
-        expect(body).to include('content="summary_large_image"')
 
-        # OG image URL は API エンドポイントを指す
-        expect(body).to include("/api/v1/public/pacts/#{pact.id}/og.png")
+        # 動的 OG 画像生成は無効化中。og:image / twitter:image は出さず、
+        # twitter:card は summary（画像なし）にする。
+        expect(body).not_to include('property="og:image"')
+        expect(body).not_to include('name="twitter:image"')
+        expect(body).to include('content="summary"')
+        expect(body).not_to include('content="summary_large_image"')
 
         # 契約の中身が description / title に入っている
         expect(body).to include("毎日 30 分読書する")
@@ -60,7 +62,7 @@ RSpec.describe "/p/:id 公開契約シェアページ", type: :request do
       it "200 OK だが OGP meta は付かない（React 側で「見つかりません」表示）" do
         get "/p/#{private_pact.id}"
         expect(response).to have_http_status(:ok)
-        expect(response.body).not_to include('property="og:image"')
+        expect(response.body).not_to include('property="og:title"')
         expect(response.body).not_to include("ひみつの目標")
       end
     end
@@ -69,7 +71,7 @@ RSpec.describe "/p/:id 公開契約シェアページ", type: :request do
       it "200 OK だが OGP meta は付かない" do
         get "/p/999999"
         expect(response).to have_http_status(:ok)
-        expect(response.body).not_to include('property="og:image"')
+        expect(response.body).not_to include('property="og:title"')
       end
     end
   end

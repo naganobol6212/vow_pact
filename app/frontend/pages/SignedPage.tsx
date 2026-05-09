@@ -67,16 +67,14 @@ function SignedPage() {
     titleMutation.mutate()
   }, [pact, titleMutation])
 
-  // OG image PNG を先取りフェッチして Rails.cache（Solid Cache）を温める。
-  // Render Free tier では初回生成に 10 秒以上かかるため、ユーザーが SignedPage を見ている間に
-  // 裏で生成完了させておく。シェアボタン押下後に X クローラーが来たときには cache hit するので
-  // 即座に PNG を返せる。失敗しても X 投稿フローには影響させない。
-  useEffect(() => {
-    if (!id) return
-    const ctrl = new AbortController()
-    fetch(`/api/v1/public/pacts/${id}/og.png`, { signal: ctrl.signal }).catch(() => {})
-    return () => ctrl.abort()
-  }, [id])
+  // 動的 OG image 生成は OOM / レンダリング不安定のため一時無効化中。
+  // 再開する際は以下の useEffect を復活させる（cache 温め用の先取りフェッチ）。
+  // useEffect(() => {
+  //   if (!id) return
+  //   const ctrl = new AbortController()
+  //   fetch(`/api/v1/public/pacts/${id}/og.png`, { signal: ctrl.signal }).catch(() => {})
+  //   return () => ctrl.abort()
+  // }, [id])
 
   if (isLoading) {
     return (
