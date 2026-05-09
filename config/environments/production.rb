@@ -53,13 +53,18 @@ Rails.application.configure do
   # 本格的な永続キャッシュが必要になった段階で `bin/rails solid_cache:install` で
   # migration を作成して Solid Cache に戻す。
   #
+  # メモリ上限（OOM 対策）:
+  #   Render Free tier の RAM は 512MB。Rails 起動で 200〜250MB、rsvg-convert + Noto CJK で
+  #   一時的に +50MB スパイクするため、cache 上限は 64MB に抑える（256MB だと OOM-kill が起きた）。
+  #   PNG 1 枚 ~250KB（2x 出力）+ gzip 圧縮で実質 ~150KB なので、64MB あれば数百件キャッシュできる。
+  #
   # トレードオフ:
   #   - スピンダウン後の最初のアクセスはキャッシュが空のため OG image 生成に 10 秒以上かかり、
   #     X クローラーのタイムアウトに引っかかる可能性がある（SignedPage の useEffect で
   #     ユーザー操作中に先取りフェッチして温める対応で緩和）。
   #   - PNG（数百 KB）をそのまま保持するとメモリを食うので、compress: true で gzip 圧縮する。
   config.cache_store = :memory_store, {
-    size: 256.megabytes,
+    size: 64.megabytes,
     compress: true,
     compress_threshold: 1.kilobyte
   }
