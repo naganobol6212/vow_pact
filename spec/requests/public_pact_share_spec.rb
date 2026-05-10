@@ -26,7 +26,7 @@ RSpec.describe "/p/:id 公開契約シェアページ", type: :request do
         expect(response.media_type).to eq("text/html")
       end
 
-      it "OGP meta タグ（og:image / twitter:image 含む）を HTML に直接埋め込む" do
+      it "OGP meta タグを HTML に直接埋め込む（動的 OG image は再度無効化中のため画像系 meta は出さない）" do
         get "/p/#{pact.id}"
         body = response.body
 
@@ -36,18 +36,12 @@ RSpec.describe "/p/:id 公開契約シェアページ", type: :request do
         expect(body).to include('property="og:url"')
         expect(body).to include('name="twitter:card"')
 
-        # 動的 OG 画像生成（PR 6 で再有効化）。og:image / twitter:image を出し、
-        # twitter:card は summary_large_image。
-        expect(body).to include('property="og:image"')
-        expect(body).to include('name="twitter:image"')
-        expect(body).to include('content="summary_large_image"')
-        # og:image の URL は /api/v1/public/pacts/:id/og.png を指す
-        expect(body).to match(%r{/api/v1/public/pacts/#{pact.id}/og\.png})
-        # 推奨サイズ
-        expect(body).to include('property="og:image:width"')
-        expect(body).to include('content="1200"')
-        expect(body).to include('property="og:image:height"')
-        expect(body).to include('content="630"')
+        # 動的 OG 画像生成は再度無効化中（rsvg-convert + Render の Design 品質ギャップ）。
+        # og:image / twitter:image は出さず、twitter:card は summary（画像なし）にする。
+        expect(body).not_to include('property="og:image"')
+        expect(body).not_to include('name="twitter:image"')
+        expect(body).to include('content="summary"')
+        expect(body).not_to include('content="summary_large_image"')
 
         # 契約の中身が description / title に入っている
         expect(body).to include("毎日 30 分読書する")

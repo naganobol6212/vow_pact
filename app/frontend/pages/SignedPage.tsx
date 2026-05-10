@@ -115,16 +115,15 @@ function SignedPage() {
     titleMutation.mutate()
   }, [pact, titleMutation])
 
-  // OG image の先取りフェッチ（cache 温め）。
-  // Render Free tier では rsvg-convert 初回 +Noto CJK 読み込みで 10 秒以上かかるため、
-  // ユーザーが SignedPage を見ている間に裏で発火しておくと、X 投稿後にクローラーが
-  // 来たときにはほぼ即時で 200 を返せる。失敗しても致命的ではないので catch は no-op。
-  useEffect(() => {
-    if (!id) return
-    const ctrl = new AbortController()
-    fetch(`/api/v1/public/pacts/${id}/og.png`, { signal: ctrl.signal }).catch(() => {})
-    return () => ctrl.abort()
-  }, [id])
+  // 動的 OG image はレンダリング品質の問題（背景黒・フォント崩れ・レイアウト崩れ）
+  // で再度無効化中。og:image meta も layout で出していないので先取りフェッチ不要。
+  // 再開する際は以下を復活させる:
+  // useEffect(() => {
+  //   if (!id) return
+  //   const ctrl = new AbortController()
+  //   fetch(`/api/v1/public/pacts/${id}/og.png`, { signal: ctrl.signal }).catch(() => {})
+  //   return () => ctrl.abort()
+  // }, [id])
 
   if (isLoading) {
     return (
