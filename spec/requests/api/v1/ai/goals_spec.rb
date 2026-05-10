@@ -113,6 +113,34 @@ RSpec.describe "Api::V1::Ai::Goals", type: :request do
       end
     end
 
+    context "ログイン中で genre が指定された場合" do
+      before do
+        post "/api/v1/auth/login", params: login_params, as: :json
+      end
+
+      it "genre が GoalSuggester に渡され、ai_generations にも記録される" do
+        expect_any_instance_of(::Ai::GoalSuggester).to receive(:suggest)
+          .with(theme: "朝の習慣", genre: "健康")
+          .and_return([ "朝 5 時に起きる", "起床後すぐ水を 1 杯", "起きてストレッチ 5 分" ])
+
+        post "/api/v1/ai/goals", params: { theme: "朝の習慣", genre: "健康" }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(AiGeneration.last.input_data).to eq("theme" => "朝の習慣", "genre" => "健康")
+      end
+
+      it "未サポートの genre は GoalSuggester 内で nil 化されて無視される" do
+        # サポート外文字列 "foo" は presence で残るが Suggester 側で nil 化される。
+        expect_any_instance_of(::Ai::GoalSuggester).to receive(:suggest)
+          .with(theme: "朝の習慣", genre: "foo")
+          .and_return([ "案 1", "案 2", "案 3" ])
+
+        post "/api/v1/ai/goals", params: { theme: "朝の習慣", genre: "foo" }, as: :json
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
     context "ログイン中で theme が空（おまかせ／ランダムモード）の場合" do
       before do
         post "/api/v1/auth/login", params: login_params, as: :json
@@ -120,8 +148,9 @@ RSpec.describe "Api::V1::Ai::Goals", type: :request do
 
       it "theme なしでも 200 OK を返し、目標案 3 つを返す" do
         # GoalSuggester がランダムモードのプロンプトで呼ばれることを期待
+        # genre 未指定は nil として渡る（params[:genre].to_s.presence の挙動）
         expect_any_instance_of(::Ai::GoalSuggester).to receive(:suggest)
-          .with(theme: "")
+          .with(theme: "", genre: nil)
           .and_return([ "朝5時に起きる", "毎日1ページ哲学書を読む", "週1で新しい料理に挑戦" ])
 
         post "/api/v1/ai/goals", params: {}, as: :json
