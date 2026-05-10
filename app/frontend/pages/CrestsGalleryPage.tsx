@@ -178,8 +178,16 @@ function CrestsGalleryPage() {
           </p>
         </header>
 
-        {/* 公開フィードへの導線（PR 5 で実装される /explore へ）*/}
-        {/* TODO(PR 5): /explore が実装され次第このリンクを有効化する */}
+        {/* 公開フィードへの導線（広場 = 他ユーザーの公開契約一覧）*/}
+        <div className="text-center mt-3">
+          <Link
+            to="/explore"
+            className="inline-flex items-center gap-1.5 text-xs font-serif text-seal hover:underline"
+          >
+            <span aria-hidden="true">🌳</span>
+            他の誓約者の広場を覗く →
+          </Link>
+        </div>
 
         {/* 統計 */}
         {pacts.length > 0 && (

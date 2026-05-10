@@ -5,11 +5,23 @@ import Layout from "../components/Layout"
 import Button from "../components/Button"
 import FormField from "../components/FormField"
 import { useCreatePact } from "../contexts/CreatePactContext"
-import { useSuggestGoals } from "../hooks/useAi"
+import { useSuggestGoals, type GoalGenre } from "../hooks/useAi"
+
+const GENRES: { value: GoalGenre; label: string }[] = [
+  { value: "", label: "指定なし" },
+  { value: "学習", label: "学習" },
+  { value: "健康", label: "健康" },
+  { value: "創造", label: "創造" },
+  { value: "社交", label: "社交" },
+  { value: "内省", label: "内省" },
+  { value: "仕事", label: "仕事" },
+  { value: "生活", label: "生活" },
+]
 
 function CreatePactStep1Page() {
   const { draft, setDraft } = useCreatePact()
   const [theme, setTheme] = useState("")
+  const [genre, setGenre] = useState<GoalGenre>("")
   const [suggestions, setSuggestions] = useState<string[]>([])
   const navigate = useNavigate()
   const suggestMutation = useSuggestGoals()
@@ -18,7 +30,7 @@ function CreatePactStep1Page() {
     if (suggestMutation.isPending) return
     if (!theme.trim()) return
     try {
-      const res = await suggestMutation.mutateAsync({ theme })
+      const res = await suggestMutation.mutateAsync({ theme, genre })
       setSuggestions(res.goals ?? [])
     } catch {
       setSuggestions([])
@@ -26,11 +38,12 @@ function CreatePactStep1Page() {
   }
 
   // テーマなしで AI に「突拍子もない / ストレッチ / 面白い / 自己成長」をミックスさせる。
+  // genre は指定されていればその方向に偏らせる。
   const handleRandomSuggest = async () => {
     // disabled が描画される前の連打で重複リクエストを防ぐためのガード。
     if (suggestMutation.isPending) return
     try {
-      const res = await suggestMutation.mutateAsync({})
+      const res = await suggestMutation.mutateAsync({ genre })
       setSuggestions(res.goals ?? [])
     } catch {
       setSuggestions([])
@@ -57,14 +70,42 @@ function CreatePactStep1Page() {
             <span className="text-gold mr-2">⚜</span>AI に提案してもらう（任意）
           </h3>
           <p className="text-xs text-ink/60 mb-3">
-            テーマを入力すると AI が目標案を 3 つ提案します。
+            テーマを入力すると AI が目標案を 3 つ提案します。ジャンルを選ぶとその方向に偏ります。
           </p>
+
+          {/* ジャンル選択（任意）*/}
+          <div className="mb-3">
+            <p className="text-xs text-ink/60 mb-1.5">ジャンル（任意）</p>
+            <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="ジャンル">
+              {GENRES.map((g) => {
+                const active = genre === g.value
+                return (
+                  <button
+                    key={g.value || "none"}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setGenre(g.value)}
+                    className="text-xs px-3 py-1 rounded-full font-serif transition"
+                    style={{
+                      background: active ? "var(--color-ink)" : "transparent",
+                      color: active ? "var(--color-parchment-card)" : "var(--color-ink)",
+                      border: `1px solid ${active ? "var(--color-ink)" : "var(--color-border-soft)"}`,
+                    }}
+                  >
+                    {g.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           <div className="flex gap-2 mb-3">
             <input
               type="text"
               value={theme}
               onChange={(e) => setTheme(e.target.value)}
-              placeholder="例：健康、学習、創作"
+              placeholder="例：朝の習慣、英語、節約"
               className="flex-1 px-3 py-2 bg-parchment border border-ink/30 rounded-sm text-sm focus:border-seal focus:outline-none"
             />
             <Button

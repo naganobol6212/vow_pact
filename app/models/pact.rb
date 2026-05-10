@@ -12,6 +12,11 @@ class Pact < ApplicationRecord
 
   enum :status, { active: 0, completed: 1, failed: 2, abandoned: 3 }
 
+  # 「広場」（/explore）で他ユーザーの公開契約を新着順に見せるためのスコープ。
+  # is_public=true の Pact のみ。N+1 を回避するために :user / :crest を eager load する
+  # 想定で利用するが、scope 自体は includes を含めない（呼び出し側で必要に応じて）。
+  scope :public_pacts, -> { where(is_public: true) }
+
   # バリデーション
   validates :goal,
             presence: true,
