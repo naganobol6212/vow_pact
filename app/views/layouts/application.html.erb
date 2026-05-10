@@ -9,15 +9,14 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <%# 公開契約ページ（/p/:id）の OGP / Twitter Card meta タグ。
-        SPA の useEffect で注入する meta は X クローラーから見えないため、
-        サーバーサイドで HTML に直接埋め込む。
-        ※ 動的 OG 画像（PactOgImageGenerator）は rsvg-convert + Render の組み合わせで
-           Design 品質に届かない（背景が黒 / フォント崩れ / レイアウト崩れ）ため、
-           再度無効化。og:image / twitter:image を出さず、twitter:card は summary
-           （画像なしのテキストカード）にする。
-           将来 Satori や Cloudflare Browser Rendering 等で再挑戦予定。
-           generator 自体（PactOgImageGenerator / OgImagesController）は残す。 %>
+    <%# OGP / Twitter Card 共通設定。
+        全ページで同じブランド画像（public/og.png · 1200x630）を OG 画像として使う。
+        動的画像生成は rsvg-convert + Render Free tier の組み合わせで品質が安定しなかったため、
+        手作りの静的 PNG を採用。個別契約ページ（/p/:id）では og:title / og:description のみ
+        @pact から動的に組み立てる。
+
+        絶対 URL で配信するため X クローラーが確実に拾える。 %>
+    <% og_image_url = "#{request.protocol}#{request.host_with_port}/og.png" %>
     <% if defined?(@pact) && @pact.present? %>
       <% page_url    = "#{request.protocol}#{request.host_with_port}/p/#{@pact.id}" %>
       <% nickname    = @pact.user&.nickname.presence || "誓約者" %>
@@ -29,9 +28,28 @@
       <meta property="og:url"           content="<%= page_url %>">
       <meta property="og:type"          content="article">
       <meta property="og:site_name"     content="Vow Pact">
-      <meta name="twitter:card"         content="summary">
+      <meta property="og:image"         content="<%= og_image_url %>">
+      <meta property="og:image:width"   content="1200">
+      <meta property="og:image:height"  content="630">
+      <meta name="twitter:card"         content="summary_large_image">
       <meta name="twitter:title"        content="<%= page_title %>">
       <meta name="twitter:description"  content="<%= description %>">
+      <meta name="twitter:image"        content="<%= og_image_url %>">
+    <% else %>
+      <%# /p/:id 以外（ホーム / 広場 / 個別 SPA ルート）共通の OGP フォールバック %>
+      <meta name="description"          content="目標と制約を「誓い」として刻み、達成すれば紋章を得る。自分との契約を、形にする場。">
+      <meta property="og:title"         content="VowPact 誓約契約">
+      <meta property="og:description"   content="自分との契約を、紋章に変える。">
+      <meta property="og:url"           content="<%= "#{request.protocol}#{request.host_with_port}#{request.fullpath}" %>">
+      <meta property="og:type"          content="website">
+      <meta property="og:site_name"     content="Vow Pact">
+      <meta property="og:image"         content="<%= og_image_url %>">
+      <meta property="og:image:width"   content="1200">
+      <meta property="og:image:height"  content="630">
+      <meta name="twitter:card"         content="summary_large_image">
+      <meta name="twitter:title"        content="VowPact 誓約契約">
+      <meta name="twitter:description"  content="自分との契約を、紋章に変える。">
+      <meta name="twitter:image"        content="<%= og_image_url %>">
     <% end %>
 
     <%= yield :head %>
