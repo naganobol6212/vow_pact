@@ -9,13 +9,25 @@ type ConstraintsResponse = { constraints: string[] }
 type DifficultyResponse = { difficulty: number; reason: string }
 type TitlesResponse = { titles: string[] }
 
+/** AI が偏らせるジャンル。空文字 / undefined はジャンル横断（おまかせ）。 */
+export type GoalGenre =
+  | ""
+  | "学習"
+  | "健康"
+  | "創造"
+  | "社交"
+  | "内省"
+  | "仕事"
+  | "生活"
+
 export function useSuggestGoals() {
   // theme を省略 / 空で呼ぶと、サーバ側で「おまかせ（ランダム）モード」になる。
-  return useMutation<GoalsResponse, ApiError, { theme?: string }>({
-    mutationFn: ({ theme }) =>
+  // genre を指定するとそのジャンルに寄せて提案する（任意）。
+  return useMutation<GoalsResponse, ApiError, { theme?: string; genre?: GoalGenre }>({
+    mutationFn: ({ theme, genre }) =>
       api<GoalsResponse>("/ai/goals", {
         method: "POST",
-        body: { theme: theme ?? "" },
+        body: { theme: theme ?? "", genre: genre ?? "" },
       }),
   })
 }
