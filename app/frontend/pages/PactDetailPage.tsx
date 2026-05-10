@@ -7,7 +7,9 @@ import Modal from "../components/Modal"
 import HeraldicCrest from "../components/HeraldicCrest"
 import ProgressGrass from "../components/ProgressGrass"
 import StarDivider from "../components/StarDivider"
+import ContractCard from "../components/ContractCard"
 import { api, ApiError } from "../lib/api"
+import { useAuth } from "../hooks/useAuth"
 import type { Pact } from "../types/pact"
 import type { CheckIn, CheckInStatus } from "../types/check_in"
 
@@ -27,10 +29,53 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+/** 契約書のセクション（【目標】 / 【制約】 / 等のラベル付き）。 */
+function DetailSection({
+  label,
+  en,
+  children,
+}: {
+  label: string
+  en: string
+  children: React.ReactNode
+}) {
+  return (
+    <section className="mb-4">
+      <div className="flex items-baseline justify-between mb-1.5">
+        <h3
+          className="font-serif font-semibold m-0"
+          style={{
+            fontSize: 11,
+            letterSpacing: "0.45em",
+            color: "var(--color-gold-muted)",
+            paddingLeft: "0.45em",
+          }}
+        >
+          【{label}】
+        </h3>
+        <span
+          className="font-display"
+          style={{
+            fontSize: 9,
+            letterSpacing: "0.3em",
+            color: "var(--color-gold-muted)",
+            opacity: 0.7,
+          }}
+          aria-hidden="true"
+        >
+          {en}
+        </span>
+      </div>
+      {children}
+    </section>
+  )
+}
+
 function PactDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { user } = useAuth()
   const [note, setNote] = useState("")
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [editOpen, setEditOpen] = useState(false)
@@ -114,10 +159,37 @@ function PactDetailPage() {
           </div>
         )}
 
-        {/* 契約サマリ */}
-        <div className="mb-6 p-6 bg-parchment border-2 border-gold/60 rounded-sm">
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <p className="font-serif text-xl text-seal flex-1">{pact.goal}</p>
+        {/* 契約書（4 隅装飾 + 二重金枠） */}
+        <ContractCard className="mb-6">
+          {/* 表題 */}
+          <header className="text-center mb-4">
+            <h2
+              className="font-serif font-semibold m-0"
+              style={{
+                fontSize: "clamp(20px, 6vw, 24px)",
+                letterSpacing: "0.45em",
+                color: "var(--color-ink)",
+                paddingLeft: "0.45em",
+              }}
+            >
+              誓約契約書
+            </h2>
+            <p
+              className="font-display mt-1.5"
+              style={{
+                fontSize: 10,
+                letterSpacing: "0.3em",
+                color: "var(--color-gold-muted)",
+              }}
+            >
+              VOW PACT &middot; No. {String(pact.id).padStart(3, "0")}
+            </p>
+          </header>
+
+          <StarDivider />
+
+          {/* ステータスバッジ */}
+          <div className="flex items-center justify-end mt-4">
             <span
               className={`text-xs px-2 py-0.5 rounded-sm whitespace-nowrap ${
                 pact.status === "active"
@@ -127,17 +199,33 @@ function PactDetailPage() {
                     : "bg-ink/5 text-ink/40 border border-ink/20"
               }`}
             >
-              {pact.status === "active" ? "進行中" : pact.status === "completed" ? "達成" : pact.status}
+              {pact.status === "active"
+                ? "進行中"
+                : pact.status === "completed"
+                  ? "達成"
+                  : pact.status === "abandoned"
+                    ? "破棄"
+                    : pact.status === "failed"
+                      ? "失敗"
+                      : pact.status}
             </span>
           </div>
 
-          {/* 称号（締結時に AI で自動付与される）*/}
+          {/* 称号 */}
           {pact.title && (
-            <section className="mb-4 px-4 py-3 border border-gold/60 bg-gold/5 text-center">
-              <p className="text-[10px] tracking-[0.4em] text-gold font-serif font-semibold mb-1">
-                TITLE GRANTED
+            <section className="mt-4 px-4 py-3 border border-gold/60 bg-gold/5 text-center">
+              <p
+                className="font-display font-semibold mb-1"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.4em",
+                  color: "var(--color-gold-deep)",
+                  paddingLeft: "0.4em",
+                }}
+              >
+                ── TITLE GRANTED ──
               </p>
-              <p className="font-serif text-sm sm:text-base font-semibold text-ink tracking-wider">
+              <p className="font-serif text-base sm:text-lg font-semibold text-ink tracking-wider">
                 {pact.title.endsWith("者") ? (
                   <>
                     {pact.title.slice(0, -1)}
@@ -150,22 +238,67 @@ function PactDetailPage() {
             </section>
           )}
 
-          <section className="mb-3">
-            <p className="text-xs text-ink/60 font-serif">制約</p>
-            <p className="text-sm text-ink">{pact.constraint_text}</p>
-          </section>
-          <section className="mb-3">
-            <p className="text-xs text-ink/60 font-serif">期日</p>
-            <p className="text-sm text-ink">{pact.deadline}</p>
-          </section>
-          <section className="mb-3">
-            <p className="text-xs text-ink/60 font-serif">難易度</p>
-            <p className="text-sm text-ink">
-              {"⚔".repeat(difficulty)}
-              <span className="text-ink/30">{"⚔".repeat(5 - difficulty)}</span>
-              <span className="ml-2">{pact.difficulty} / 5</span>
+          {/* 本文 */}
+          <DetailSection label="目標" en="GOAL">
+            <p className="font-serif text-base text-ink leading-relaxed">{pact.goal}</p>
+          </DetailSection>
+
+          <DetailSection label="制約" en="TRIAL">
+            <p className="font-serif text-base text-ink leading-relaxed">
+              {pact.constraint_text}
             </p>
-          </section>
+          </DetailSection>
+
+          <div className="grid grid-cols-2 gap-4">
+            <DetailSection label="期日" en="DEADLINE">
+              <p className="font-serif text-base text-ink">{pact.deadline}</p>
+            </DetailSection>
+            <DetailSection label="難易度" en="DIFFICULTY">
+              <p className="font-serif text-base">
+                <span className="text-seal tracking-widest">{"⚔".repeat(difficulty)}</span>
+                <span className="text-ink/20 tracking-widest">
+                  {"⚔".repeat(5 - difficulty)}
+                </span>
+                <span className="ml-2 text-sm text-ink/70">{pact.difficulty} / 5</span>
+              </p>
+            </DetailSection>
+          </div>
+
+          <div className="my-5">
+            <StarDivider />
+          </div>
+
+          {/* 署名（誓約者）：Caveat フォントで手書き感 */}
+          <div className="flex items-end justify-between mt-3">
+            <div>
+              <p
+                className="font-display"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.3em",
+                  color: "var(--color-gold-muted)",
+                  marginBottom: 2,
+                }}
+              >
+                SIGNED BY
+              </p>
+              <span
+                className="inline-block"
+                style={{
+                  fontFamily: "var(--font-signature)",
+                  fontSize: 30,
+                  color: "var(--color-ink)",
+                  lineHeight: 1,
+                  transform: "rotate(-2deg)",
+                }}
+              >
+                {user?.nickname ?? "誓約者"}
+              </span>
+            </div>
+            <p className="text-xs text-ink/50">
+              締結 {pact.signed_at.slice(0, 10)}
+            </p>
+          </div>
 
           {/* 公開設定 */}
           <PublicToggle pact={pact} />
@@ -185,7 +318,7 @@ function PactDetailPage() {
               </div>
             </section>
           )}
-        </div>
+        </ContractCard>
 
         {/* 編集モーダル */}
         {editOpen && (

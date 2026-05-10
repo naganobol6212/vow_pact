@@ -50,10 +50,21 @@ function HomePage() {
         </div>
 
         <div className="relative max-w-3xl mx-auto text-center">
+          <p
+            className="font-display font-semibold mb-2"
+            style={{
+              fontSize: 11,
+              letterSpacing: "0.55em",
+              color: "var(--color-gold-deep)",
+              paddingLeft: "0.55em",
+            }}
+            aria-hidden="true"
+          >
+            ── VOW PACT &middot; MMXXVI ──
+          </p>
           <h2 className="font-serif text-3xl sm:text-5xl font-bold text-seal mb-2 tracking-wide">
             誓約 <span className="text-gold mx-1 sm:mx-2">⚔</span> 契約
           </h2>
-          <p className="font-serif text-xs sm:text-sm text-ink/60 mb-3 tracking-[0.3em]">VOW PACT</p>
           <p className="text-ink/80 text-sm sm:text-base leading-relaxed mb-6 max-w-md mx-auto">
             目標と制約を「誓い」として刻み、達成すれば紋章を得る。
             <br className="hidden sm:block" />
@@ -112,12 +123,28 @@ function HomePage() {
 
       {/* 使い方 3 ステップ（ファーストビューに収まる位置に） */}
       <section className="max-w-5xl mx-auto mb-12">
-        <div className="flex items-end justify-between mb-4">
-          <h3 className="font-serif text-xl sm:text-2xl text-seal">使い方</h3>
+        <div className="flex items-end justify-between mb-1">
+          <div>
+            <p
+              className="font-display font-semibold"
+              style={{
+                fontSize: 10,
+                letterSpacing: "0.5em",
+                color: "var(--color-gold-muted)",
+                paddingLeft: "0.5em",
+              }}
+              aria-hidden="true"
+            >
+              ── HOW IT WORKS ──
+            </p>
+            <h3 className="font-serif text-xl sm:text-2xl text-seal mt-1">使い方</h3>
+          </div>
           <Link to="/how-it-works" className="text-xs text-seal hover:underline">
             くわしく →
           </Link>
         </div>
+        <div className="mb-4" />
+
 
         <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {HOW_IT_WORKS.map((item) => (
@@ -141,11 +168,23 @@ function HomePage() {
       </section>
 
       {/* 特徴 */}
-      <section className="max-w-4xl mx-auto mb-12">
-        <h3 className="font-serif text-xl sm:text-2xl text-center text-seal mb-2">
+      <section className="max-w-4xl mx-auto mb-12 text-center">
+        <p
+          className="font-display font-semibold mb-1"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.5em",
+            color: "var(--color-gold-muted)",
+            paddingLeft: "0.5em",
+          }}
+          aria-hidden="true"
+        >
+          ── DIFFERENCES ──
+        </p>
+        <h3 className="font-serif text-xl sm:text-2xl text-seal mb-2">
           他の習慣アプリとの違い
         </h3>
-        <p className="text-center text-xs text-ink/60 mb-6">
+        <p className="text-xs text-ink/60 mb-6">
           「TODO リスト」では味わえない、自分との契約感
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -7,6 +7,9 @@ import Button from "../components/Button"
 import ShareButton from "../components/ShareButton"
 import PactSeal from "../components/PactSeal"
 import HeraldicCrest from "../components/HeraldicCrest"
+import ContractCard from "../components/ContractCard"
+import StarDivider from "../components/StarDivider"
+import { useAuth } from "../hooks/useAuth"
 import { api, ApiError } from "../lib/api"
 import type { Pact } from "../types/pact"
 import {
@@ -20,10 +23,54 @@ const fadeUp = {
   animate: { opacity: 1, y: 0 },
 }
 
+/** 契約書のセクションラベル（【目標】 / GOAL）。PactDetailPage の DetailSection と
+ * 同じパターン。コンポーネント分離するほどでもないので各画面でローカル定義する。 */
+function SignedSection({
+  label,
+  en,
+  children,
+}: {
+  label: string
+  en: string
+  children: React.ReactNode
+}) {
+  return (
+    <section className="mb-3">
+      <div className="flex items-baseline justify-between mb-1">
+        <h4
+          className="font-serif font-semibold m-0"
+          style={{
+            fontSize: 11,
+            letterSpacing: "0.45em",
+            color: "var(--color-gold-muted)",
+            paddingLeft: "0.45em",
+          }}
+        >
+          【{label}】
+        </h4>
+        <span
+          className="font-display"
+          style={{
+            fontSize: 9,
+            letterSpacing: "0.3em",
+            color: "var(--color-gold-muted)",
+            opacity: 0.7,
+          }}
+          aria-hidden="true"
+        >
+          {en}
+        </span>
+      </div>
+      {children}
+    </section>
+  )
+}
+
 function SignedPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { user } = useAuth()
 
   const {
     data: pact,
@@ -171,40 +218,107 @@ function SignedPage() {
           )}
         </motion.div>
 
-        {/* 契約サマリ */}
+        {/* 契約サマリ（ContractCard で 4 隅装飾 + 二重金枠） */}
         <motion.div
-          className="text-left p-6 bg-parchment border-2 border-gold/60 rounded-xl shadow-lg mb-8"
+          className="text-left mb-8"
           {...fadeUp}
           transition={{ duration: 0.6, delay: 1.0 }}
         >
-          <section className="mb-3">
-            <p className="text-xs text-ink/60 font-serif">目標</p>
-            <p className="text-base text-ink">{pact.goal}</p>
-          </section>
-          <section className="mb-3">
-            <p className="text-xs text-ink/60 font-serif">制約</p>
-            <p className="text-base text-ink">{pact.constraint_text}</p>
-          </section>
-          <section className="mb-3">
-            <p className="text-xs text-ink/60 font-serif">期日</p>
-            <p className="text-base text-ink">{pact.deadline}</p>
-          </section>
-          <section>
-            <p className="text-xs text-ink/60 font-serif">難易度</p>
-            <p className="text-base text-ink">
-              {(() => {
-                // 想定外の値（API 異常等）でも repeat() が RangeError を起こさないようクランプ
-                const d = Math.min(5, Math.max(0, pact.difficulty))
-                return (
-                  <>
-                    {"⚔".repeat(d)}
-                    <span className="text-ink/30">{"⚔".repeat(5 - d)}</span>
-                    <span className="ml-2 text-sm">{pact.difficulty} / 5</span>
-                  </>
-                )
-              })()}
-            </p>
-          </section>
+          <ContractCard>
+            <header className="text-center mb-3">
+              <h3
+                className="font-serif font-semibold m-0"
+                style={{
+                  fontSize: "clamp(18px, 5.5vw, 22px)",
+                  letterSpacing: "0.45em",
+                  color: "var(--color-ink)",
+                  paddingLeft: "0.45em",
+                }}
+              >
+                誓約契約書
+              </h3>
+              <p
+                className="font-display mt-1.5"
+                style={{
+                  fontSize: 9,
+                  letterSpacing: "0.3em",
+                  color: "var(--color-gold-muted)",
+                }}
+              >
+                VOW PACT &middot; No. {String(pact.id).padStart(3, "0")}
+              </p>
+            </header>
+
+            <StarDivider />
+
+            <div className="mt-5 mb-1">
+              <SignedSection label="目標" en="GOAL">
+                <p className="font-serif text-base text-ink">{pact.goal}</p>
+              </SignedSection>
+              <SignedSection label="制約" en="TRIAL">
+                <p className="font-serif text-base text-ink">{pact.constraint_text}</p>
+              </SignedSection>
+              <div className="grid grid-cols-2 gap-4">
+                <SignedSection label="期日" en="DEADLINE">
+                  <p className="font-serif text-base text-ink">{pact.deadline}</p>
+                </SignedSection>
+                <SignedSection label="難易度" en="DIFFICULTY">
+                  <p className="font-serif text-base">
+                    {(() => {
+                      const d = Math.min(5, Math.max(0, pact.difficulty))
+                      return (
+                        <>
+                          <span className="text-seal tracking-widest">{"⚔".repeat(d)}</span>
+                          <span className="text-ink/20 tracking-widest">
+                            {"⚔".repeat(5 - d)}
+                          </span>
+                          <span className="ml-2 text-sm text-ink/70">
+                            {pact.difficulty} / 5
+                          </span>
+                        </>
+                      )
+                    })()}
+                  </p>
+                </SignedSection>
+              </div>
+            </div>
+
+            <div className="my-4">
+              <StarDivider />
+            </div>
+
+            {/* 署名: Caveat フォントで手書き感 */}
+            <div className="flex items-end justify-between mt-2">
+              <div>
+                <p
+                  className="font-display"
+                  style={{
+                    fontSize: 9,
+                    letterSpacing: "0.3em",
+                    color: "var(--color-gold-muted)",
+                    marginBottom: 2,
+                  }}
+                >
+                  SIGNED BY
+                </p>
+                <span
+                  className="inline-block"
+                  style={{
+                    fontFamily: "var(--font-signature)",
+                    fontSize: 28,
+                    color: "var(--color-ink)",
+                    lineHeight: 1,
+                    transform: "rotate(-2deg)",
+                  }}
+                >
+                  {user?.nickname ?? "誓約者"}
+                </span>
+              </div>
+              <p className="text-xs text-ink/50">
+                締結 {pact.signed_at.slice(0, 10)}
+              </p>
+            </div>
+          </ContractCard>
         </motion.div>
 
         {/* X シェア。常に /p/:id を使い、押下時に契約を公開化する（A 案）。
