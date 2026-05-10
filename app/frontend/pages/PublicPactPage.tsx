@@ -33,22 +33,23 @@ function PublicPactPage() {
     enabled: !!id,
   })
 
-  // OG image の先取りフェッチ（cache 温め）。SignedPage と同じ意図。
-  useEffect(() => {
-    if (!id) return
-    const ctrl = new AbortController()
-    fetch(`/api/v1/public/pacts/${id}/og.png`, { signal: ctrl.signal }).catch(() => {})
-    return () => ctrl.abort()
-  }, [id])
+  // 動的 OG image は再度無効化中（rsvg-convert + Render の Design 品質ギャップ）。
+  // og:image meta も layout で出していないので先取りフェッチ不要。
+  // 再開する際は以下を復活させる:
+  // useEffect(() => {
+  //   if (!id) return
+  //   const ctrl = new AbortController()
+  //   fetch(`/api/v1/public/pacts/${id}/og.png`, { signal: ctrl.signal }).catch(() => {})
+  //   return () => ctrl.abort()
+  // }, [id])
 
   // OGP / Twitter Card 用のメタタグを動的に注入。
-  // SSR で /p/:id 直接アクセス時は application.html.erb 側で og:image も含めて埋め込む。
-  // ここで設定するのは SPA 内遷移時の document.title などのフォールバック用。
+  // 動的 OG image は無効化中のため og:image / twitter:image は出さず、
+  // twitter:card は summary（画像なし）にする。
   useEffect(() => {
     if (!pact) return
     const origin = window.location.origin
     const url = `${origin}/p/${pact.id}`
-    const ogImage = `${origin}/api/v1/public/pacts/${pact.id}/og.png`
     const title = `${pact.author.nickname} の誓約：${pact.goal}`
     const description = `制約：${pact.constraint_text} / 期日：${pact.deadline}`
 
@@ -57,11 +58,9 @@ function PublicPactPage() {
     setMetaProperty("og:description", description)
     setMetaProperty("og:url", url)
     setMetaProperty("og:type", "article")
-    setMetaProperty("og:image", ogImage)
-    setMetaProperty("twitter:card", "summary_large_image")
+    setMetaProperty("twitter:card", "summary")
     setMetaProperty("twitter:title", title)
     setMetaProperty("twitter:description", description)
-    setMetaProperty("twitter:image", ogImage)
     document.title = title
   }, [pact])
 
