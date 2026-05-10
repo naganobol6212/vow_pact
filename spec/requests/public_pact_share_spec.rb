@@ -26,7 +26,7 @@ RSpec.describe "/p/:id 公開契約シェアページ", type: :request do
         expect(response.media_type).to eq("text/html")
       end
 
-      it "OGP meta タグを HTML に直接埋め込む（動的 OG image は再度無効化中のため画像系 meta は出さない）" do
+      it "OGP meta タグ（og:image / twitter:image 含む）を HTML に直接埋め込む" do
         get "/p/#{pact.id}"
         body = response.body
 
@@ -36,12 +36,15 @@ RSpec.describe "/p/:id 公開契約シェアページ", type: :request do
         expect(body).to include('property="og:url"')
         expect(body).to include('name="twitter:card"')
 
-        # 動的 OG 画像生成は再度無効化中（rsvg-convert + Render の Design 品質ギャップ）。
-        # og:image / twitter:image は出さず、twitter:card は summary（画像なし）にする。
-        expect(body).not_to include('property="og:image"')
-        expect(body).not_to include('name="twitter:image"')
-        expect(body).to include('content="summary"')
-        expect(body).not_to include('content="summary_large_image"')
+        # 静的 OG 画像（public/og.png）を絶対 URL で配信。twitter:card は summary_large_image。
+        expect(body).to include('property="og:image"')
+        expect(body).to include('name="twitter:image"')
+        expect(body).to match(%r{/og\.png})
+        expect(body).to include('content="summary_large_image"')
+        expect(body).to include('property="og:image:width"')
+        expect(body).to include('content="1200"')
+        expect(body).to include('property="og:image:height"')
+        expect(body).to include('content="630"')
 
         # 契約の中身が description / title に入っている
         expect(body).to include("毎日 30 分読書する")
@@ -59,19 +62,27 @@ RSpec.describe "/p/:id 公開契約シェアページ", type: :request do
         p
       end
 
-      it "200 OK だが OGP meta は付かない（React 側で「見つかりません」表示）" do
+      it "契約の中身は漏らさず、ブランド OGP のフォールバックが出る" do
         get "/p/#{private_pact.id}"
         expect(response).to have_http_status(:ok)
-        expect(response.body).not_to include('property="og:title"')
+
+        # 非公開契約の中身は HTML に出ない（タイトルやニックネームを含む情報漏洩を防ぐ）
         expect(response.body).not_to include("ひみつの目標")
+        expect(response.body).not_to include("テスト誓約者")
+
+        # ただしブランド OGP のフォールバックは出る（X カードに「VowPact」が表示される）
+        expect(response.body).to include("VowPact 誓約契約")
+        expect(response.body).to include('property="og:image"')
+        expect(response.body).to match(%r{/og\.png})
       end
     end
 
     context "存在しない id の場合" do
-      it "200 OK だが OGP meta は付かない" do
+      it "契約は無いが、ブランド OGP のフォールバックが出る" do
         get "/p/999999"
         expect(response).to have_http_status(:ok)
-        expect(response.body).not_to include('property="og:title"')
+        expect(response.body).to include("VowPact 誓約契約")
+        expect(response.body).to include('property="og:image"')
       end
     end
   end
