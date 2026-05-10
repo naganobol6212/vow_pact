@@ -4,6 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import Layout from "../components/Layout"
 import Button from "../components/Button"
 import Modal from "../components/Modal"
+import HeraldicCrest from "../components/HeraldicCrest"
+import ProgressGrass from "../components/ProgressGrass"
+import StarDivider from "../components/StarDivider"
 import { api, ApiError } from "../lib/api"
 import type { Pact } from "../types/pact"
 import type { CheckIn, CheckInStatus } from "../types/check_in"
@@ -104,6 +107,13 @@ function PactDetailPage() {
   return (
     <Layout title="誓約">
       <div className="max-w-2xl mx-auto">
+        {/* 達成済みなら紋章を大きく表示（HeraldicCrest）*/}
+        {pact.status === "completed" && pact.crest && (
+          <div className="flex justify-center mb-6">
+            <HeraldicCrest rarity={pact.crest.rarity} size={140} animate />
+          </div>
+        )}
+
         {/* 契約サマリ */}
         <div className="mb-6 p-6 bg-parchment border-2 border-gold/60 rounded-sm">
           <div className="flex items-start justify-between gap-3 mb-4">
@@ -185,6 +195,33 @@ function PactDetailPage() {
         {/* 削除確認ダイアログ */}
         {deleteOpen && (
           <DeleteConfirmDialog pact={pact} onClose={() => setDeleteOpen(false)} />
+        )}
+
+        {/* 進捗草式（GitHub 風グリッド）：契約期間中の毎日のチェックイン状態を可視化 */}
+        {checkIns && (
+          <section className="mb-6 p-5 bg-parchment-card border border-gold/40 rounded-sm">
+            <header className="mb-3 flex items-baseline justify-between gap-3">
+              <h2 className="font-serif text-base text-ink m-0">足跡</h2>
+              <span
+                className="font-display"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.4em",
+                  color: "var(--color-gold-muted)",
+                  paddingLeft: "0.4em",
+                }}
+              >
+                FOOTPRINTS
+              </span>
+            </header>
+            <StarDivider />
+            <p className="text-xs text-ink/60 mt-3 mb-3">
+              {pact.signed_at.slice(0, 10)} 〜 {pact.deadline}
+            </p>
+            <div className="overflow-x-auto -mx-2 px-2">
+              <ProgressGrass pact={pact} checkIns={checkIns} interactive />
+            </div>
+          </section>
         )}
 
         {/* 今日のチェックイン */}

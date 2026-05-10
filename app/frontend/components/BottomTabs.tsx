@@ -24,7 +24,7 @@ const TABS: Tab[] = [
   },
   {
     to: "/crests",
-    label: "紋章",
+    label: "殿堂",
     icon: "🏆",
     match: (p) => p === "/crests" || p.startsWith("/crests/"),
   },

@@ -5,7 +5,8 @@ import { motion } from "framer-motion"
 import Layout from "../components/Layout"
 import Button from "../components/Button"
 import ShareButton from "../components/ShareButton"
-import CrestSeal from "../components/CrestSeal"
+import PactSeal from "../components/PactSeal"
+import HeraldicCrest from "../components/HeraldicCrest"
 import { api, ApiError } from "../lib/api"
 import type { Pact } from "../types/pact"
 import {
@@ -106,13 +107,13 @@ function SignedPage() {
   return (
     <Layout title="誓約締結" showFooter={false}>
       <div className="max-w-xl mx-auto text-center mt-8 px-2">
-        {/* シール演出（Framer Motion） */}
+        {/* シール演出: 達成時は紋章リビール、締結時は朱印押印 */}
         <div className="flex justify-center mb-8">
-          <CrestSeal
-            symbol={isCompleted ? "🏆" : "⚔"}
-            size={180}
-            emphasized={isCompleted}
-          />
+          {isCompleted && pact.crest ? (
+            <HeraldicCrest rarity={pact.crest.rarity} size={180} animate />
+          ) : (
+            <PactSeal size={180} animate />
+          )}
         </div>
 
         <motion.h2
