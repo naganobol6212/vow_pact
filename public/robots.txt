@@ -1,1 +1,30 @@
-# See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
+# Vow Pact robots.txt
+#
+# 仕様メモ:
+# - 空（Disallow なし）でも RFC 上は「全許可」だが、一部のクローラー検証ツール
+#   （特に X Card Validator）が「ルール不明 = 拒否」と解釈する事例が観測された
+#   ため、主要クローラーに対して明示的に Allow: / を書き出している。
+# - サイトマップは現状運用していないので未指定。
+
+User-agent: *
+Allow: /
+
+# X (Twitter) の OGP クローラー。明示しないと Card Validator で
+# "Fetching the page failed because it's denied by robots.txt." と返る場合がある。
+User-agent: Twitterbot
+Allow: /
+
+# Facebook の OGP クローラー。シェアプレビュー用。
+User-agent: facebookexternalhit
+Allow: /
+
+# Slack のリンク展開ボット。Slack 上でリンクをきれいに展開させる。
+User-agent: Slackbot-LinkExpanding
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+# Discord の埋め込みボット。
+User-agent: Discordbot
+Allow: /
