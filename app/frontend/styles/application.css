@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Caveat:wght@500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Homemade+Apple&family=Mr+Dafoe&family=Caveat:wght@500;600&display=swap");
 
 @theme {
   /* 既存（互換維持）*/
@@ -33,5 +33,7 @@
   --font-sans: "Noto Sans JP", sans-serif;
   --font-serif: "Noto Serif JP", serif;
   --font-display: "Cormorant Garamond", "Noto Serif JP", serif;  /* 英字装飾 */
-  --font-signature: "Caveat", "Dancing Script", cursive;          /* 手書き署名 */
+  /* 手書き署名: Homemade Apple は実際の手書きサインに近い揺らぎ感、
+     Mr Dafoe は格調高いカリグラフィ風。Caveat はカジュアルなフォールバック。 */
+  --font-signature: "Homemade Apple", "Mr Dafoe", "Caveat", cursive;
 }

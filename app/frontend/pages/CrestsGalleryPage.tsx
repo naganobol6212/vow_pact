@@ -13,7 +13,6 @@ import HallFilterBar, {
 } from "../components/HallFilterBar"
 import TrophyCard from "../components/hall/TrophyCard"
 import ActiveCard from "../components/hall/ActiveCard"
-import AbandonedCard from "../components/hall/AbandonedCard"
 import { api, ApiError } from "../lib/api"
 import type { Pact, CrestRarity } from "../types/pact"
 import type { CheckIn } from "../types/check_in"
@@ -69,14 +68,13 @@ function CrestsGalleryPage() {
     return map
   }, [activePacts, checkInQueries])
 
-  // 表示対象を絞り込む
+  // 表示対象を絞り込む。
+  // 「破棄した契約は表示しない」方針のため abandoned / failed はどのフィルタでも除外する。
   const visible = useMemo(() => {
-    let list = pacts.slice()
+    let list = pacts.filter((p) => p.status === "completed" || p.status === "active")
     if (filter === "fulfilled") list = list.filter((p) => p.status === "completed")
     else if (filter === "active") list = list.filter((p) => p.status === "active")
-    else if (filter === "abandoned")
-      list = list.filter((p) => p.status === "abandoned" || p.status === "failed")
-    // "all" は全部見せる（fulfilled + active + abandoned + failed）
+    // "all" は completed + active のみ（破棄・失敗は見せない）
 
     if (sort === "rarity") {
       list.sort((a, b) => {
@@ -245,15 +243,13 @@ function CrestsGalleryPage() {
                         no={no}
                         keptRate={1.0 /* TODO: PactSerializer に kept_rate を追加したら差し替える */}
                       />
-                    ) : pact.status === "active" ? (
+                    ) : (
                       <ActiveCard
                         pact={pact}
                         no={no}
                         checkIns={checkInsByPactId.get(pact.id) ?? []}
                         daysLeft={computeDaysLeft(pact)}
                       />
-                    ) : (
-                      <AbandonedCard pact={pact} no={no} />
                     )}
                   </motion.div>
                 )

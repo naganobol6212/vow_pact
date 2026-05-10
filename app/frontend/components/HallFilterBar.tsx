@@ -1,4 +1,4 @@
-export type HallFilter = "all" | "fulfilled" | "active" | "abandoned"
+export type HallFilter = "all" | "fulfilled" | "active"
 export type HallSort = "recent" | "rarity"
 
 type Props = {
@@ -8,11 +8,12 @@ type Props = {
   onSort: (next: HallSort) => void
 }
 
+// 破棄した契約は表示しない方針のため "破棄" タブを削除。
+// "失敗" も表示しない（今は failed 状態に遷移する経路自体ほぼ無いが、念のため見せない）。
 const FILTERS: { id: HallFilter; label: string }[] = [
   { id: "all", label: "全て" },
   { id: "fulfilled", label: "達成" },
   { id: "active", label: "進行中" },
-  { id: "abandoned", label: "破棄" },
 ]
 
 const SORTS: { id: HallSort; label: string; en: string }[] = [

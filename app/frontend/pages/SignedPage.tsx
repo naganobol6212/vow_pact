@@ -306,9 +306,10 @@ function SignedPage() {
                   className="inline-block"
                   style={{
                     fontFamily: "var(--font-signature)",
-                    fontSize: 28,
+                    // Homemade Apple の描画サイズに合わせて大きめ
+                    fontSize: 34,
                     color: "var(--color-ink)",
-                    lineHeight: 1,
+                    lineHeight: 1.3,
                     transform: "rotate(-2deg)",
                   }}
                 >

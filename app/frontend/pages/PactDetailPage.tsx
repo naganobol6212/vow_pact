@@ -138,8 +138,8 @@ function PactDetailPage() {
       <Layout title="誓約">
         <div className="text-center mt-12">
           <p className="text-seal mb-4">誓いが見つかりませんでした</p>
-          <Link to="/pacts">
-            <Button variant="ghost">書庫へ戻る</Button>
+          <Link to="/crests">
+            <Button variant="ghost">殿堂へ戻る</Button>
           </Link>
         </div>
       </Layout>
@@ -286,9 +286,10 @@ function PactDetailPage() {
                 className="inline-block"
                 style={{
                   fontFamily: "var(--font-signature)",
-                  fontSize: 30,
+                  // Homemade Apple は em 内の実描画が小さめなのでやや大きく
+                  fontSize: 36,
                   color: "var(--color-ink)",
-                  lineHeight: 1,
+                  lineHeight: 1.3,
                   transform: "rotate(-2deg)",
                 }}
               >
@@ -435,8 +436,8 @@ function PactDetailPage() {
         </div>
 
         <div className="flex justify-between">
-          <Button variant="ghost" onClick={() => navigate("/pacts")}>
-            契約一覧へ戻る
+          <Button variant="ghost" onClick={() => navigate("/crests")}>
+            殿堂へ戻る
           </Button>
         </div>
       </div>
@@ -646,7 +647,7 @@ function DeleteConfirmDialog({ pact, onClose }: { pact: Pact; onClose: () => voi
       // 既存パターンと挙動を揃えるため、invalidate を await してから navigate する。
       await queryClient.invalidateQueries({ queryKey: ["pact", String(pact.id)] })
       await queryClient.invalidateQueries({ queryKey: ["pacts"] })
-      navigate("/pacts", { replace: true })
+      navigate("/crests", { replace: true })
     },
     onError: (err) => {
       const errors = Array.isArray(err.errors) ? err.errors : []
