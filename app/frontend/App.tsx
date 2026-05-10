@@ -8,7 +8,6 @@ import CreatePactStep3Page from "./pages/CreatePactStep3Page"
 import CreatePactStep4Page from "./pages/CreatePactStep4Page"
 import SignedPage from "./pages/SignedPage"
 import PactDetailPage from "./pages/PactDetailPage"
-import CrestsGalleryPage from "./pages/CrestsGalleryPage"
 import RankingsPage from "./pages/RankingsPage"
 import SettingsPage from "./pages/SettingsPage"
 import ForgotPasswordPage from "./pages/ForgotPasswordPage"
@@ -73,8 +72,8 @@ function App() {
             }
           />
 
-          {/* 旧「契約一覧」は殿堂と機能が重複していたため廃止。/pacts は /crests にリダイレクト。 */}
-          <Route path="/pacts" element={<Navigate to="/crests" replace />} />
+          {/* 旧「契約一覧」は廃止 → ホームのダッシュボードに集約。/pacts は / にリダイレクト。 */}
+          <Route path="/pacts" element={<Navigate to="/" replace />} />
 
           {/* 契約詳細 + チェックイン UI */}
           <Route
@@ -86,15 +85,8 @@ function App() {
             }
           />
 
-          {/* 紋章ギャラリー（誓約の殿堂） */}
-          <Route
-            path="/crests"
-            element={
-              <RequireAuth>
-                <CrestsGalleryPage />
-              </RequireAuth>
-            }
-          />
+          {/* 旧「誓約の殿堂」(/crests) はホームのダッシュボードに統合。/crests は / にリダイレクト。 */}
+          <Route path="/crests" element={<Navigate to="/" replace />} />
 
           {/* ランキング（誓約者の番付） */}
           <Route

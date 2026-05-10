@@ -27,17 +27,22 @@ function TrophyCard({ pact, no, keptRate }: Props) {
     <Link
       to={`/pacts/${pact.id}`}
       aria-label={`${pact.goal}（${rarityLabel}）の達成記録`}
-      className="block text-center transition hover:-translate-y-0.5"
+      className="block text-center transition-all duration-200 ease-out hover:-translate-y-1"
       style={{
-        background: "var(--color-parchment)",
+        background: "var(--color-parchment-card)",
         border: "0.5px solid var(--color-border-soft)",
         outline: "1px solid rgba(201,169,97,0.47)",
         outlineOffset: "-4px",
         padding: "30px 12px 14px",
         position: "relative",
-        boxShadow:
-          "0 6px 16px -10px rgba(44,24,16,0.35), 0 1px 2px rgba(44,24,16,0.05)",
+        boxShadow: "var(--shadow-card)",
         color: "var(--color-ink)",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = "var(--shadow-card-hover)"
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = "var(--shadow-card)"
       }}
     >
       {/* No. */}

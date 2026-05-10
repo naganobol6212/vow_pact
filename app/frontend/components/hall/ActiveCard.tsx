@@ -32,14 +32,20 @@ function ActiveCard({ pact, no, checkIns, daysLeft, predictedRarity = "common" }
     <Link
       to={`/pacts/${pact.id}`}
       aria-label={`${pact.goal}（進行中）の詳細を見る`}
-      className="block transition hover:-translate-y-0.5"
+      className="block transition-all duration-200 ease-out hover:-translate-y-1"
       style={{
         background: "#ffffff",
         border: `0.5px solid var(--color-rarity-${predictedRarity}-primary)55`,
         padding: "20px 18px 18px",
         position: "relative",
-        boxShadow: "0 4px 12px -8px rgba(44,24,16,0.2)",
+        boxShadow: "var(--shadow-card)",
         color: "var(--color-ink)",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = "var(--shadow-card-hover)"
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = "var(--shadow-card)"
       }}
     >
       <div className="flex items-start justify-between mb-3">

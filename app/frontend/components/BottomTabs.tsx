@@ -8,18 +8,21 @@ type Tab = {
   match: (path: string) => boolean
 }
 
-// 旧「契約」タブ（/pacts）は殿堂と機能が重複していたため廃止。
-// 殿堂が「達成 + 進行中」を 1 ページに統合表示するため契約一覧の役割を引き継ぐ。
-// /pacts への直接アクセスは /crests へリダイレクト。
+// 旧「契約」「殿堂」タブは廃止し、ホームのダッシュボードに集約。
+// 空いた枠で「広場」（他ユーザーの公開契約一覧 /explore）を昇格。
+// /pacts /crests への直接アクセスは / にリダイレクト。
 const TABS: Tab[] = [
   {
     to: "/",
     label: "ホーム",
     icon: "🏠",
-    // /pacts/:id 詳細もホームから辿れるためここで吸収（誓う以外の /pacts/* は home 扱い）
+    // /pacts/:id 詳細 / /crests / /pacts もホームから辿れるためここで吸収。
+    // 誓う（/pacts/new/...）だけは別タブ。
     match: (p) =>
       p === "/" ||
-      (p.startsWith("/pacts/") && !p.startsWith("/pacts/new") && p !== "/pacts"),
+      p === "/crests" ||
+      p === "/pacts" ||
+      (p.startsWith("/pacts/") && !p.startsWith("/pacts/new")),
   },
   {
     to: "/pacts/new/step1",
@@ -28,10 +31,10 @@ const TABS: Tab[] = [
     match: (p) => p.startsWith("/pacts/new"),
   },
   {
-    to: "/crests",
-    label: "殿堂",
-    icon: "🏆",
-    match: (p) => p === "/crests" || p.startsWith("/crests/") || p === "/pacts",
+    to: "/explore",
+    label: "広場",
+    icon: "🌳",
+    match: (p) => p === "/explore" || p.startsWith("/explore/") || p.startsWith("/p/"),
   },
   {
     to: "/settings",
@@ -54,7 +57,7 @@ function BottomTabs() {
       <div className="h-16" aria-hidden="true" />
 
       <nav
-        className="fixed bottom-0 inset-x-0 z-40 bg-parchment-bg/95 backdrop-blur-md border-t border-gold/40 shadow-[0_-4px_20px_rgba(139,26,26,0.08)]"
+        className="fixed bottom-0 inset-x-0 z-40 bg-parchment-bg/85 backdrop-blur-md border-t border-gold/40 shadow-[0_-4px_24px_rgba(139,26,26,0.12)]"
         aria-label="メインナビゲーション"
       >
         <div className="container mx-auto max-w-2xl">
