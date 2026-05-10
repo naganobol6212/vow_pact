@@ -40,8 +40,27 @@ RSpec.describe PactOgImageGenerator, type: :service do
         expect(svg).to include("2 / 5")
       end
 
-      it "完了バッジは描画されない" do
-        expect(svg).not_to include("成就")
+      it "active 状態では「成就せり」（達成ヘッドライン）は描画されない" do
+        expect(svg).not_to include("成就せり")
+      end
+
+      it "HeraldicCrest（盾形紋章 + 中央の「誓」字）が描画される" do
+        # 盾の path は HeraldicCrest 共通の値
+        expect(svg).to include("M70 14 L108 22")
+        # 中央バンドの「誓」字（紋章中央）
+        expect(svg).to include(">誓<")
+      end
+
+      it "Design 準拠の二重金枠と 4 隅装飾が含まれる" do
+        expect(svg).to include('stroke-width="2.5"')
+        expect(svg).to include('stroke-opacity="0.55"')
+        expect(svg).to include("M0 0 L60 0 M0 0 L0 60")
+      end
+
+      it "ブランド帯と SIGN · ENDURE · BE CROWNED フッターが含まれる" do
+        expect(svg).to include("VOW PACT · MMXXVI")
+        expect(svg).to include("SIGN · ENDURE · BE CROWNED")
+        expect(svg).to include("vowpact.app")
       end
     end
 
@@ -58,8 +77,14 @@ RSpec.describe PactOgImageGenerator, type: :service do
         expect(svg).to include("あなたの誓いは見事に達成された。紋章が授けられる。")
       end
 
-      it "完了バッジ（成就）が含まれる" do
-        expect(svg).to include("成就")
+      it "達成済み crest があれば rarity 別の紋章色が出る" do
+        # crest を持たせて legendary 色（金）を確認
+        crest = build(:crest, pact: pact, rarity: :legendary)
+        crest.save!(validate: false)
+        pact.reload
+        legendary_svg = described_class.new(pact).to_svg
+        # legendary palette の primary 色（#a77b1f）が SVG に含まれる
+        expect(legendary_svg).to include("#a77b1f")
       end
     end
 

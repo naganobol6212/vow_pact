@@ -12,13 +12,12 @@
     <%# 公開契約ページ（/p/:id）の OGP / Twitter Card meta タグ。
         SPA の useEffect で注入する meta は X クローラーから見えないため、
         サーバーサイドで HTML に直接埋め込む。
-        ※ 動的 OG 画像生成は OOM / レンダリング不安定のため一時無効化中。
-           og:image / twitter:image を出さず、twitter:card は summary（画像なし）にする。
-           動的画像生成を再開する際は、og:image / twitter:image の出力と
-           twitter:card を summary_large_image に戻し、SignedPage / PublicPactPage の
-           先取りフェッチも復活させる。 %>
+        og:image は動的に生成した PNG（PactOgImageGenerator + Design 準拠の盾形紋章）。
+        Render Free tier の OOM 対策として MemoryStore を 64MB に絞り、画像は
+        Rails.cache に updated_at キーでキャッシュする（OgImagesController 参照）。 %>
     <% if defined?(@pact) && @pact.present? %>
       <% page_url    = "#{request.protocol}#{request.host_with_port}/p/#{@pact.id}" %>
+      <% og_image_url = "#{request.protocol}#{request.host_with_port}/api/v1/public/pacts/#{@pact.id}/og.png" %>
       <% nickname    = @pact.user&.nickname.presence || "誓約者" %>
       <% page_title  = "#{nickname} の誓約：#{@pact.goal}" %>
       <% description = "目標：#{@pact.goal} ／ 制約：#{@pact.constraint_text} ／ 期日：#{@pact.deadline}" %>
@@ -28,9 +27,13 @@
       <meta property="og:url"           content="<%= page_url %>">
       <meta property="og:type"          content="article">
       <meta property="og:site_name"     content="Vow Pact">
-      <meta name="twitter:card"         content="summary">
+      <meta property="og:image"         content="<%= og_image_url %>">
+      <meta property="og:image:width"   content="1200">
+      <meta property="og:image:height"  content="630">
+      <meta name="twitter:card"         content="summary_large_image">
       <meta name="twitter:title"        content="<%= page_title %>">
       <meta name="twitter:description"  content="<%= description %>">
+      <meta name="twitter:image"        content="<%= og_image_url %>">
     <% end %>
 
     <%= yield :head %>
