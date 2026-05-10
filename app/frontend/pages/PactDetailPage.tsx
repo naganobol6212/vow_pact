@@ -138,8 +138,8 @@ function PactDetailPage() {
       <Layout title="誓約">
         <div className="text-center mt-12">
           <p className="text-seal mb-4">誓いが見つかりませんでした</p>
-          <Link to="/crests">
-            <Button variant="ghost">殿堂へ戻る</Button>
+          <Link to="/">
+            <Button variant="ghost">ホームへ戻る</Button>
           </Link>
         </div>
       </Layout>
@@ -436,8 +436,8 @@ function PactDetailPage() {
         </div>
 
         <div className="flex justify-between">
-          <Button variant="ghost" onClick={() => navigate("/crests")}>
-            殿堂へ戻る
+          <Button variant="ghost" onClick={() => navigate("/")}>
+            ホームへ戻る
           </Button>
         </div>
       </div>

@@ -32,8 +32,8 @@ function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/crests" className="hover:text-seal transition">
-                  紋章コレクション
+                <Link to="/explore" className="hover:text-seal transition">
+                  誓約の広場
                 </Link>
               </li>
             </ul>

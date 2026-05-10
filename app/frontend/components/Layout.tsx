@@ -1,6 +1,7 @@
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import type { ReactNode } from "react"
+import { motion, useReducedMotion } from "framer-motion"
 import { useAuth } from "../hooks/useAuth"
 import { api } from "../lib/api"
 import Footer from "./Footer"
@@ -17,6 +18,9 @@ function Layout({ children, title, showHeader = true, showFooter = true }: Layou
   const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const location = useLocation()
+  // OS のアニメ抑制設定を尊重。アクセシビリティ要件として欠かせない。
+  const reducedMotion = useReducedMotion()
 
   const handleLogout = async () => {
     try {
@@ -32,9 +36,21 @@ function Layout({ children, title, showHeader = true, showFooter = true }: Layou
   }
 
   return (
-    <div className="min-h-screen bg-parchment-bg text-ink font-sans flex flex-col">
+    <div className="min-h-screen bg-parchment-bg text-ink font-sans flex flex-col relative overflow-x-hidden">
+      {/* 背景に羊皮紙の奥行きを足す radial gradient（コンテンツの後ろに敷くだけ） */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(251,246,236,0.7) 0%, rgba(241,231,210,0.0) 60%), radial-gradient(ellipse 100% 80% at 50% 100%, rgba(216,201,168,0.4) 0%, rgba(216,201,168,0) 70%)",
+        }}
+      />
       {showHeader && (
-        <header className="border-b border-gold/30 bg-parchment-bg/80 backdrop-blur-sm sticky top-0 z-30">
+        <header
+          className="border-b border-gold/30 bg-parchment-bg/70 backdrop-blur-md sticky top-0 z-30"
+          style={{ boxShadow: "0 1px 0 rgba(201,169,97,0.15), 0 8px 24px -16px rgba(44,24,16,0.18)" }}
+        >
           <div className="container mx-auto px-4 py-3 flex items-center justify-between">
             <Link
               to="/"
@@ -119,7 +135,17 @@ function Layout({ children, title, showHeader = true, showFooter = true }: Layou
         </header>
       )}
 
-      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">{children}</main>
+      {/* ページ進入アニメ（fade + slide-up）。reduced-motion 設定なら無効。
+          location.pathname を key にして、ルート切替で再 mount → アニメが走る。 */}
+      <motion.main
+        key={location.pathname}
+        initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+        className="flex-1 container mx-auto px-4 py-6 sm:py-8 relative z-10"
+      >
+        {children}
+      </motion.main>
 
       {/* ログイン後はモバイルアプリ風の BottomTabs、未ログイン時は通常のリンクフッター */}
       {showFooter && (

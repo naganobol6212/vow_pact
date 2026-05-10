@@ -32,10 +32,10 @@ function ContractCard({
     <article
       className={`relative ${className}`}
       style={{
-        background: "var(--color-parchment)",
+        // parchment-card（最も明るい羊皮紙）でコンテンツが背景から浮き上がる構造に。
+        background: "var(--color-parchment-card)",
         border: "0.5px solid var(--color-border-soft)",
-        boxShadow:
-          "0 1px 0 rgba(255,255,255,0.4) inset, 0 12px 28px -16px rgba(44,24,16,0.35), 0 2px 4px rgba(44,24,16,0.06)",
+        boxShadow: "var(--shadow-elevated)",
         padding: "36px 26px 28px",
         outline: "1px solid var(--color-gold)",
         outlineOffset: `-${outlineOffset}px`,

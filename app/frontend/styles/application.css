@@ -36,4 +36,10 @@
   /* 手書き署名: Homemade Apple は実際の手書きサインに近い揺らぎ感、
      Mr Dafoe は格調高いカリグラフィ風。Caveat はカジュアルなフォールバック。 */
   --font-signature: "Homemade Apple", "Mr Dafoe", "Caveat", cursive;
+
+  /* Soft elevation システム（リッチモダン UI 用）。
+     2 段（近距離 + 遠距離）の影を重ねて自然な浮遊感を作る。 */
+  --shadow-card: 0 1px 2px rgba(44, 24, 16, 0.04), 0 8px 24px -12px rgba(44, 24, 16, 0.18);
+  --shadow-card-hover: 0 2px 4px rgba(44, 24, 16, 0.06), 0 16px 32px -16px rgba(44, 24, 16, 0.24);
+  --shadow-elevated: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 12px 28px -16px rgba(44, 24, 16, 0.35), 0 2px 4px rgba(44, 24, 16, 0.06);
 }
