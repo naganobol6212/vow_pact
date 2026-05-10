@@ -1,12 +1,37 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Caveat:wght@500;600&display=swap");
 
 @theme {
-  --color-parchment: #f4e8d0;
+  /* 既存（互換維持）*/
+  --color-parchment: #f4e8d0;        /* 中間: 契約書カード */
   --color-ink: #2c1810;
   --color-seal: #8b1a1a;
   --color-gold: #c9a961;
 
+  /* 背景の 3 層構造（モックアップ準拠）
+     bg(濃) → 中(parchment) → card(薄) で奥行きを出す */
+  --color-parchment-bg: #ece2cf;       /* 外側ページ背景 */
+  --color-parchment-bg-end: #d8c9a8;   /* グラデ終端 */
+  --color-parchment-card: #fbf6ec;     /* 内側カード背景（最も明るい）*/
+  --color-parchment-soft: #f1e7d2;     /* radial gradient 中間色 */
+
+  /* 補助色（モックアップ）*/
+  --color-gold-deep: #a77b1f;          /* 装飾英字 */
+  --color-gold-muted: #8b6f47;         /* 控えめゴールド（ラベル）*/
+  --color-border-soft: #d4c8b0;        /* 罫線 */
+
+  /* レアリティ色（HeraldicCrest 用、PR 2 で参照）*/
+  --color-rarity-common-primary: #7a7060;
+  --color-rarity-common-secondary: #a89c84;
+  --color-rarity-rare-primary: #3a5a8c;
+  --color-rarity-rare-secondary: #7a9bc2;
+  --color-rarity-epic-primary: #6b3a8c;
+  --color-rarity-epic-secondary: #a877c7;
+  --color-rarity-legendary-primary: #a77b1f;
+  --color-rarity-legendary-secondary: #e8c873;
+
   --font-sans: "Noto Sans JP", sans-serif;
   --font-serif: "Noto Serif JP", serif;
+  --font-display: "Cormorant Garamond", "Noto Serif JP", serif;  /* 英字装飾 */
+  --font-signature: "Caveat", "Dancing Script", cursive;          /* 手書き署名 */
 }

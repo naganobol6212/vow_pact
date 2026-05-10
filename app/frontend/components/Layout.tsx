@@ -32,9 +32,9 @@ function Layout({ children, title, showHeader = true, showFooter = true }: Layou
   }
 
   return (
-    <div className="min-h-screen bg-parchment text-ink font-sans flex flex-col">
+    <div className="min-h-screen bg-parchment-bg text-ink font-sans flex flex-col">
       {showHeader && (
-        <header className="border-b border-gold/30 bg-parchment/80 backdrop-blur-sm sticky top-0 z-30">
+        <header className="border-b border-gold/30 bg-parchment-bg/80 backdrop-blur-sm sticky top-0 z-30">
           <div className="container mx-auto px-4 py-3 flex items-center justify-between">
             <Link
               to="/"

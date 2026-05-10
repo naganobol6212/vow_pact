@@ -6,8 +6,9 @@ import Button from "../components/Button"
 import { api, ApiError } from "../lib/api"
 import type { Pact, PactStatus } from "../types/pact"
 
-const STATUS_TABS: { value: PactStatus | "all"; label: string }[] = [
-  { value: "all", label: "全て" },
+// 「全て」タブは削除済み。Hall ページ（紋章コレクション）が
+// 達成 / 進行中 / 破棄 をまとめて表示する役割を担う。
+const STATUS_TABS: { value: PactStatus; label: string }[] = [
   { value: "active", label: "進行中" },
   { value: "completed", label: "達成" },
   { value: "abandoned", label: "破棄" },
@@ -22,21 +23,22 @@ const STATUS_BADGE: Record<PactStatus, { text: string; className: string }> = {
 }
 
 function PactsListPage() {
-  const [filter, setFilter] = useState<PactStatus | "all">("all")
+  // デフォルトは「進行中」。ユーザーがまず確認したいのは active な誓い。
+  const [filter, setFilter] = useState<PactStatus>("active")
 
   const { data: pacts, isLoading, isError } = useQuery<Pact[], ApiError>({
     queryKey: ["pacts"],
     queryFn: () => api<Pact[]>("/pacts"),
   })
 
-  const filtered = pacts?.filter((p) => filter === "all" || p.status === filter) ?? []
+  const filtered = pacts?.filter((p) => p.status === filter) ?? []
 
   return (
     <Layout title="契約一覧">
       <div className="max-w-3xl mx-auto">
         <div className="mb-6 text-center">
           <p className="font-serif text-2xl text-seal mb-2">契約一覧</p>
-          <p className="text-sm text-ink/60">これまでに結んだすべての契約</p>
+          <p className="text-sm text-ink/60">結んだ誓いの記録</p>
         </div>
 
         {/* タブ */}

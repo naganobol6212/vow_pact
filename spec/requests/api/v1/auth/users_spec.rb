@@ -72,6 +72,34 @@ RSpec.describe "Api::V1::Auth::Users", type: :request do
         expect(response).to have_http_status(:unauthorized)
       end
     end
+
+    # Active Storage の avatar が添付されているとき、avatar_image_url が
+    # 正しい絶対 URL（host + protocol が分離されたもの）を返すことを保証する。
+    # 旧実装は host: にスキーム込み URL を渡しており URL が壊れていた。
+    context "アバター画像が添付されている場合" do
+      before do
+        post "/api/v1/auth/login", params: login_params, as: :json
+        user.avatar.attach(
+          io: StringIO.new("dummy-png"),
+          filename: "avatar.png",
+          content_type: "image/png"
+        )
+      end
+
+      it "avatar_image_url が rails_blob_url の形式で返る" do
+        get "/api/v1/auth/me", as: :json
+
+        expect(response).to have_http_status(:ok)
+        url = response.parsed_body["avatar_image_url"]
+        expect(url).to be_a(String)
+        # 絶対 URL（http(s):// で始まる）
+        expect(url).to match(%r{\Ahttps?://})
+        # 重複したスキーム（http://https://...）が混入していない
+        expect(url).not_to match(%r{//https?://})
+        # Active Storage のパス
+        expect(url).to include("/rails/active_storage/")
+      end
+    end
   end
 
   describe "PATCH /api/v1/auth/email" do

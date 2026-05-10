@@ -49,7 +49,7 @@ function BottomTabs() {
       <div className="h-16" aria-hidden="true" />
 
       <nav
-        className="fixed bottom-0 inset-x-0 z-40 bg-parchment/95 backdrop-blur-md border-t border-gold/40 shadow-[0_-4px_20px_rgba(139,26,26,0.08)]"
+        className="fixed bottom-0 inset-x-0 z-40 bg-parchment-bg/95 backdrop-blur-md border-t border-gold/40 shadow-[0_-4px_20px_rgba(139,26,26,0.08)]"
         aria-label="メインナビゲーション"
       >
         <div className="container mx-auto max-w-2xl">
