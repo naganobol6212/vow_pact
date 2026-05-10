@@ -52,6 +52,7 @@ Rails.application.routes.draw do
 
       # 公開エンドポイント（認証不要、is_public=true の契約のみ）
       namespace :public do
+        get "pacts",            to: "pacts#index",    as: :pacts
         get "pacts/:id",        to: "pacts#show",     as: :pact
         get "pacts/:id/og.png", to: "og_images#show", as: :pact_og_image
       end

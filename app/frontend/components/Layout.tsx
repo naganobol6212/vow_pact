@@ -49,6 +49,13 @@ function Layout({ children, title, showHeader = true, showFooter = true }: Layou
                 <>
                   {/* ヘッダーには BottomTabs に入らない補助メニューだけ置く */}
                   <nav className="flex items-center gap-3 text-sm">
+                    <Link
+                      to="/explore"
+                      className="text-ink/70 hover:text-seal transition"
+                      title="誓約の広場"
+                    >
+                      🌳<span className="hidden sm:inline ml-1">広場</span>
+                    </Link>
                     {!user?.is_guest && (
                       <Link
                         to="/rankings"
@@ -85,8 +92,11 @@ function Layout({ children, title, showHeader = true, showFooter = true }: Layou
                   </div>
                 </>
               ) : (
-                /* 未ログイン時のヘッダー右側：使い方 + 認証 CTA */
+                /* 未ログイン時のヘッダー右側：広場 + 使い方 + 認証 CTA */
                 <nav className="flex items-center gap-3 text-sm">
+                  <Link to="/explore" className="text-ink/70 hover:text-seal transition">
+                    広場
+                  </Link>
                   <Link to="/how-it-works" className="text-ink/70 hover:text-seal transition">
                     使い方
                   </Link>
