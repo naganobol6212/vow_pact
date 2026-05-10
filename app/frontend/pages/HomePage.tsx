@@ -78,8 +78,8 @@ function HomePage() {
               <Button variant="primary" onClick={() => navigate("/pacts/new/step1")}>
                 新たな誓約を結ぶ
               </Button>
-              <Button variant="ghost" onClick={() => navigate("/pacts")}>
-                契約一覧
+              <Button variant="ghost" onClick={() => navigate("/crests")}>
+                誓約の殿堂へ
               </Button>
             </div>
           ) : (

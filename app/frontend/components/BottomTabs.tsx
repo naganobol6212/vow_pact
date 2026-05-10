@@ -8,13 +8,18 @@ type Tab = {
   match: (path: string) => boolean
 }
 
+// 旧「契約」タブ（/pacts）は殿堂と機能が重複していたため廃止。
+// 殿堂が「達成 + 進行中」を 1 ページに統合表示するため契約一覧の役割を引き継ぐ。
+// /pacts への直接アクセスは /crests へリダイレクト。
 const TABS: Tab[] = [
   {
-    to: "/pacts",
-    label: "契約",
-    icon: "📜",
-    // /pacts 一覧と /pacts/:id 詳細はマッチ。ただし /pacts/new/... は「誓う」タブに譲る
-    match: (p) => p === "/pacts" || (p.startsWith("/pacts/") && !p.startsWith("/pacts/new")),
+    to: "/",
+    label: "ホーム",
+    icon: "🏠",
+    // /pacts/:id 詳細もホームから辿れるためここで吸収（誓う以外の /pacts/* は home 扱い）
+    match: (p) =>
+      p === "/" ||
+      (p.startsWith("/pacts/") && !p.startsWith("/pacts/new") && p !== "/pacts"),
   },
   {
     to: "/pacts/new/step1",
@@ -26,7 +31,7 @@ const TABS: Tab[] = [
     to: "/crests",
     label: "殿堂",
     icon: "🏆",
-    match: (p) => p === "/crests" || p.startsWith("/crests/"),
+    match: (p) => p === "/crests" || p.startsWith("/crests/") || p === "/pacts",
   },
   {
     to: "/settings",

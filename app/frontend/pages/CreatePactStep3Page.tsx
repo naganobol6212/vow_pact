@@ -84,6 +84,40 @@ function CreatePactStep3Page() {
             <p className="text-xs text-ink/60 mb-3">
               目標・制約・期日から AI が難易度（1〜5）を判定します。
             </p>
+
+            {/* 判定ロジックの説明（折り畳み） */}
+            <details className="mb-3 text-xs text-ink/70">
+              <summary className="cursor-pointer hover:text-seal font-serif">
+                どんな基準で判定する？
+              </summary>
+              <div className="mt-2 pl-3 border-l-2 border-gold/40 space-y-1.5">
+                <p>
+                  AI は <span className="font-bold">目標の具体性 / 制約の厳しさ / 期日までの長さ</span>
+                  を組み合わせて 1〜5 の整数で評価します。
+                </p>
+                <ul className="space-y-0.5 pl-4 text-ink/60" style={{ listStyle: "disc" }}>
+                  <li>
+                    <span className="text-seal font-bold">1</span> ・ 容易（数日で達成、軽い習慣）
+                  </li>
+                  <li>
+                    <span className="text-seal font-bold">2</span> ・ やや容易
+                  </li>
+                  <li>
+                    <span className="text-seal font-bold">3</span> ・ 標準（多くの人が挑戦するレベル）
+                  </li>
+                  <li>
+                    <span className="text-seal font-bold">4</span> ・ やや困難
+                  </li>
+                  <li>
+                    <span className="text-seal font-bold">5</span> ・ 極めて困難（長期 + 厳しい制約）
+                  </li>
+                </ul>
+                <p className="text-ink/50 italic">
+                  判定後も下のスライダーで自分で調整できます。
+                </p>
+              </div>
+            </details>
+
             <Button
               variant="secondary"
               type="button"

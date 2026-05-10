@@ -1,5 +1,3 @@
-import FlameIcon from "./icons/FlameIcon"
-
 type Props = {
   /** 達成した契約数 */
   achievedCount: number
@@ -10,91 +8,96 @@ type Props = {
 }
 
 /**
- * 殿堂の統計ブロック。Design hall.jsx:117-168 を移植 + ユーザー向けに分かりやすく調整。
+ * 殿堂の統計ブロック（達成 / 連続 / 最長）。
  *
- * 旧版は「達成 / スコア / 連続」だったが、「スコア」が何を意味するか不明という
- * フィードバックを受け、「達成 / 連続 / 最長」に変更。3 つとも具体的な日数 / 件数で
- * 何の数字か直感的に分かる。フォント・サイズも 3 列で完全に揃えた。
+ * 旧版は FlameIcon が STREAK 列にだけ付いていて行が崩れる + パディング過大、と
+ * フィードバックを受けたため、3 列とも完全同一レイアウト + コンパクト化に再構築。
+ *
+ * 各列は 3 行構造（英字 / 数値 / 和ラベル）で baseline を揃えるため、CSS Grid の
+ * `subgrid` ではなく明示的に 3 列 grid を作って各列の row-template を一致させる。
  */
 function HallStatsBlock({ achievedCount, streak, longestStreak }: Props) {
   return (
     <section
       aria-label="統計"
-      className="grid grid-cols-3 gap-1.5"
+      className="grid grid-cols-[1fr_1px_1fr_1px_1fr] items-stretch"
       style={{
-        margin: "16px 0 0",
-        padding: "14px 8px",
+        margin: "12px 0 0",
+        padding: "10px 6px",
         background: "rgba(255,255,255,0.55)",
         border: "1px solid var(--color-border-soft)",
         outline: "1px solid rgba(201,169,97,0.33)",
-        outlineOffset: "-5px",
+        outlineOffset: "-4px",
       }}
     >
-      <StatCol label="達成" en="ACHIEVED" value={achievedCount} unit="件" />
+      <StatCol en="ACHIEVED" value={achievedCount} unit="件" label="達成" />
       <StatDivider />
-      <StatCol
-        label="連続"
-        en="STREAK"
-        value={streak}
-        unit="日"
-        icon={<FlameIcon size={11} />}
-      />
+      <StatCol en="STREAK" value={streak} unit="日" label="連続" />
       <StatDivider />
-      <StatCol label="最長" en="LONGEST" value={longestStreak} unit="日" />
+      <StatCol en="LONGEST" value={longestStreak} unit="日" label="最長" />
     </section>
   )
 }
 
 function StatCol({
-  label,
   en,
   value,
   unit,
-  icon,
+  label,
 }: {
-  label: string
   en: string
   value: number
   unit: string
-  icon?: React.ReactNode
+  label: string
 }) {
   return (
-    <div className="text-center">
+    <div
+      className="grid"
+      style={{
+        // 3 段の高さを完全に揃えるため row 1fr の固定 grid。3 列とも同じ row-template になり
+        // 横軸で英字 / 数値 / 和ラベルがピタリ揃う。
+        gridTemplateRows: "auto auto auto",
+        rowGap: 4,
+        textAlign: "center",
+      }}
+    >
+      {/* 1: 英字ラベル */}
       <div
-        className="font-display font-semibold flex items-center justify-center gap-1"
+        className="font-display font-semibold"
         style={{
           fontSize: 9,
-          letterSpacing: "0.35em",
+          letterSpacing: "0.3em",
           color: "var(--color-gold-muted)",
-          paddingLeft: "0.35em",
-          marginBottom: 6,
+          paddingLeft: "0.3em",
+          lineHeight: 1.2,
         }}
         aria-hidden="true"
       >
-        {icon}
-        <span>{en}</span>
+        {en}
       </div>
-      <div className="inline-flex items-baseline" style={{ gap: 3 }}>
+      {/* 2: 数値 + 単位（baseline 揃えで横軸に並ぶ） */}
+      <div className="inline-flex items-baseline justify-center" style={{ gap: 2 }}>
         <span
           className="font-display font-semibold"
           style={{
-            fontSize: 24,
+            fontSize: 22,
             color: "var(--color-gold-deep)",
             lineHeight: 1,
           }}
         >
           {value}
         </span>
-        <span style={{ fontSize: 11, color: "var(--color-gold-muted)" }}>{unit}</span>
+        <span style={{ fontSize: 10, color: "var(--color-gold-muted)" }}>{unit}</span>
       </div>
+      {/* 3: 和ラベル */}
       <div
         className="font-serif"
         style={{
           fontSize: 10,
           color: "var(--color-ink)",
-          letterSpacing: "0.25em",
-          marginTop: 4,
-          paddingLeft: "0.25em",
+          letterSpacing: "0.2em",
+          paddingLeft: "0.2em",
+          lineHeight: 1.2,
         }}
       >
         {label}

@@ -7,7 +7,6 @@ import CreatePactStep2Page from "./pages/CreatePactStep2Page"
 import CreatePactStep3Page from "./pages/CreatePactStep3Page"
 import CreatePactStep4Page from "./pages/CreatePactStep4Page"
 import SignedPage from "./pages/SignedPage"
-import PactsListPage from "./pages/PactsListPage"
 import PactDetailPage from "./pages/PactDetailPage"
 import CrestsGalleryPage from "./pages/CrestsGalleryPage"
 import RankingsPage from "./pages/RankingsPage"
@@ -74,15 +73,8 @@ function App() {
             }
           />
 
-          {/* 契約一覧 */}
-          <Route
-            path="/pacts"
-            element={
-              <RequireAuth>
-                <PactsListPage />
-              </RequireAuth>
-            }
-          />
+          {/* 旧「契約一覧」は殿堂と機能が重複していたため廃止。/pacts は /crests にリダイレクト。 */}
+          <Route path="/pacts" element={<Navigate to="/crests" replace />} />
 
           {/* 契約詳細 + チェックイン UI */}
           <Route

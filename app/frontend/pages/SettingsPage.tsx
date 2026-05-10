@@ -179,6 +179,9 @@ function PromoteSection() {
 // Profile（nickname / avatar_url / is_public）
 // ============================================================
 
+// Active Storage 側と同じ上限。フロントで先に弾いて無駄なアップロードを避ける。
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024
+
 function ProfileSection({ user }: { user: User }) {
   const queryClient = useQueryClient()
   const [nickname, setNickname] = useState(user.nickname)
@@ -192,6 +195,22 @@ function ProfileSection({ user }: { user: User }) {
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null
+    if (file && file.size > AVATAR_MAX_BYTES) {
+      // サーバーまで送らずに即フィードバック
+      setErrors((prev) => ({
+        ...prev,
+        avatar: `は 2MB 以下にしてください（選択ファイル: ${(file.size / 1024 / 1024).toFixed(1)}MB）`,
+      }))
+      setAvatarFile(null)
+      setAvatarPreview(null)
+      e.target.value = "" // 同じファイルを再選択できるようリセット
+      return
+    }
+    setErrors((prev) => {
+      const next = { ...prev }
+      delete next.avatar
+      return next
+    })
     setAvatarFile(file)
     if (file) {
       const reader = new FileReader()
@@ -215,10 +234,14 @@ function ProfileSection({ user }: { user: User }) {
       setSavedRecently(true)
       setAvatarFile(null)
       setAvatarPreview(null)
-      setTimeout(() => setSavedRecently(false), 3000)
+      // 5 秒に延長（ネットワーク遅い環境でもメッセージを見逃さない）
+      setTimeout(() => setSavedRecently(false), 5000)
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] })
     },
     onError: (err) => {
+      // デバッグ用に詳細をコンソールへ。本番でも開発者ツールで原因追跡しやすくなる。
+      // （Render の Render-side ログにはアクセスできないことが多いため）
+      console.error("[Profile] save failed", err.status, err.errors)
       const errorMap: Record<string, string> = {}
       const errorList = Array.isArray(err.errors) ? err.errors : []
       errorList.forEach((e) => {
@@ -226,6 +249,10 @@ function ProfileSection({ user }: { user: User }) {
         if (item.field) errorMap[item.field] = item.message ?? "エラー"
         else errorMap.base = item.message ?? "更新に失敗しました"
       })
+      // errors 配列が空 / 構造が違う場合のフォールバック（ネットワークエラー等）
+      if (Object.keys(errorMap).length === 0) {
+        errorMap.base = `保存に失敗しました（status: ${err.status}）。時間を置いて再度お試しください。`
+      }
       setErrors(errorMap)
     },
   })
@@ -290,11 +317,19 @@ function ProfileSection({ user }: { user: User }) {
           />
           <span className="text-sm text-ink">ランキングに公開する</span>
         </label>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Button variant="primary" type="submit" disabled={updateMutation.isPending}>
             {updateMutation.isPending ? "保存中..." : "保存"}
           </Button>
-          {savedRecently && <span className="text-xs text-seal">✦ 保存しました</span>}
+          {savedRecently && (
+            <span
+              role="status"
+              aria-live="polite"
+              className="px-3 py-1.5 text-sm font-serif font-bold bg-gold/20 text-ink border border-gold rounded-sm"
+            >
+              ✦ 保存しました
+            </span>
+          )}
         </div>
         {errors.base && (
           <p className="mt-3 text-xs text-seal" role="alert">
