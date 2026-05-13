@@ -9,9 +9,9 @@ test:
   adapter: test
 
 production:
-  adapter: solid_cable
-  connects_to:
-    database:
-      writing: cable
-  polling_interval: 0.1.seconds
-  message_retention: 1.day
+  # ActionCable は現状未使用。Solid Cable はテーブル未作成のため、
+  # 誤って ActionCable を使い始めた瞬間にエラーになる事故を防ぐため
+  # async（同一プロセス内のみ動く軽量アダプタ）に固定する。
+  # 本格的に WebSocket を使う段階で solid_cable に戻し、
+  # bin/rails solid_cable:install で db/cable_migrate を生成・migrate する。
+  adapter: async
