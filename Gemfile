@@ -72,7 +72,7 @@ group :development do
   gem "letter_opener_web"
 end
 
-gem "vite_rails", "~> 3.10"
+gem "vite_rails", "~> 3.11"
 
 # JSON シリアライザー（API レスポンス整形）
 gem "alba"
