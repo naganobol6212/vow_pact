@@ -99,6 +99,35 @@ RSpec.describe "Api::V1::Auth::Users", type: :request do
         # Active Storage のパス
         expect(url).to include("/rails/active_storage/")
       end
+
+      # 本番（Render）で FRONTEND_URL の設定漏れにより avatar URL が
+      # http://localhost:3000/... となり Mixed Content でブロックされる事故が
+      # 発生したため、Render が自動付与する RENDER_EXTERNAL_URL を二次 fallback
+      # として参照する。これによりプラットフォームの環境変数だけで安全側に倒れる。
+      context "FRONTEND_URL が未設定で RENDER_EXTERNAL_URL が設定されている場合" do
+        around do |example|
+          original_frontend = ENV["FRONTEND_URL"]
+          original_render = ENV["RENDER_EXTERNAL_URL"]
+          ENV.delete("FRONTEND_URL")
+          ENV["RENDER_EXTERNAL_URL"] = "https://vow-pact.onrender.com"
+          example.run
+        ensure
+          ENV["FRONTEND_URL"] = original_frontend
+          if original_render
+            ENV["RENDER_EXTERNAL_URL"] = original_render
+          else
+            ENV.delete("RENDER_EXTERNAL_URL")
+          end
+        end
+
+        it "RENDER_EXTERNAL_URL のホスト名・スキームで URL が生成される" do
+          get "/api/v1/auth/me", as: :json
+
+          url = response.parsed_body["avatar_image_url"]
+          expect(url).to start_with("https://vow-pact.onrender.com/")
+          expect(url).to include("/rails/active_storage/")
+        end
+      end
     end
   end
 
