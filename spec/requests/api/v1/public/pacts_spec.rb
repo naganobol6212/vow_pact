@@ -66,6 +66,42 @@ RSpec.describe "Api::V1::Public::Pacts", type: :request do
       expect(author).to have_key("avatar_url")
     end
 
+    # 本番（Render）で FRONTEND_URL の設定漏れにより avatar URL が
+    # http://localhost:3000/... となり Mixed Content でブロックされる事故が
+    # 発生したため、Render が自動付与する RENDER_EXTERNAL_URL を二次 fallback
+    # として参照する。
+    context "FRONTEND_URL が未設定で RENDER_EXTERNAL_URL が設定されている場合" do
+      around do |example|
+        original_frontend = ENV["FRONTEND_URL"]
+        original_render = ENV["RENDER_EXTERNAL_URL"]
+        ENV.delete("FRONTEND_URL")
+        ENV["RENDER_EXTERNAL_URL"] = "https://vow-pact.onrender.com"
+        example.run
+      ensure
+        ENV["FRONTEND_URL"] = original_frontend
+        if original_render
+          ENV["RENDER_EXTERNAL_URL"] = original_render
+        else
+          ENV.delete("RENDER_EXTERNAL_URL")
+        end
+      end
+
+      it "author.avatar_image_url が RENDER_EXTERNAL_URL のドメインで返る" do
+        pact = make_public_pact(user: author_a, goal: "誓約 X")
+        author_a.avatar.attach(
+          io: StringIO.new("dummy-png"),
+          filename: "avatar.png",
+          content_type: "image/png"
+        )
+
+        get "/api/v1/public/pacts", as: :json
+
+        author = response.parsed_body["pacts"].find { |p| p["id"] == pact.id }["author"]
+        expect(author["avatar_image_url"]).to start_with("https://vow-pact.onrender.com/")
+        expect(author["avatar_image_url"]).to include("/rails/active_storage/")
+      end
+    end
+
     context "ページネーション" do
       before do
         # 25 件作って per_page=20 を確認
