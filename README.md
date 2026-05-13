@@ -72,7 +72,20 @@
 
 レアリティは「難易度 × 遵守率 × 期間」から計算される。
 
-### 5. ランキングで他のユーザーと競う
+### 5. ホームで自分の歩みを一望する
+
+ログイン中は **ホーム（`/`）がそのままダッシュボード**になる。
+
+- 統計ブロック（達成数 / 連続日数 / 最長記録）
+- 進行中の契約カード + 達成済みの紋章カード（フィルタ・ソート対応）
+- 紋章カタログ（取得済み / 未取得を一覧表示）
+
+### 6. 他の誓約者の歩みを覗く（広場 `/explore`）
+
+公開された他ユーザーの契約を **新着順** で閲覧できる。
+誓約のテーマや制約の発想を借りたいときの参考に。
+
+### 7. ランキングで他のユーザーと競う
 
 公開ユーザー同士で 2 軸のランキング：
 
@@ -94,6 +107,11 @@
 | 連続記録             | StreakCalculator が `users.streak_count` を自動更新                |
 | 達成判定             | PactCompleter が compliance_rate ≥ 0.5 で `completed` 化         |
 | 紋章生成             | CrestGenerator がレアリティ計算 + パーツ抽選で紋章を自動生成      |
+| ホーム ダッシュボード | ログイン時に統計 / 進行中契約 / 達成紋章 / 紋章カタログを集約    |
+| 公開フィード         | `/explore` で他ユーザーの公開契約を新着順に閲覧                  |
+| シェア用ページ       | `/p/:id` で OGP メタを HTML 直埋め込み → X カード対応             |
+| 使い方ページ         | `/how-it-works` でコンセプトと操作手順を説明                      |
+| 進捗の可視化         | ProgressGrass（GitHub commit 風の 7×N グリッド）で日々の状態を表示 |
 | ランキング           | 月間達成数ランキング / 連続記録ランキング（dense rank）           |
 | 𝕏 シェア             | 契約締結時に X 投稿画面を開く                                     |
 | AI ロギング          | 全 AI 呼び出しを ai_generations に記録（コスト分析・問題再現）   |
@@ -123,7 +141,8 @@
 | ビルド             | Vite + vite_rails（Rails 統合）            |
 | ルーティング       | React Router v7                            |
 | 状態管理           | TanStack Query v5（サーバ状態）/ React Context（ローカル状態）|
-| スタイリング       | Tailwind CSS v4                            |
+| スタイリング       | Tailwind CSS v4（CSS 変数で羊皮紙系 3 層階調を定義）|
+| アニメーション     | Framer Motion（ページ遷移 / 締結演出 / `useReducedMotion` 尊重）|
 | Test / Lint        | Vitest + Testing Library / ESLint + Prettier|
 
 ### インフラ / 開発環境
@@ -145,20 +164,41 @@
 vow_pact/
 ├── app/
 │   ├── controllers/
-│   │   ├── api/v1/                  # API エンドポイント（auth, pacts, check_ins, rankings, ai）
+│   │   ├── api/v1/                  # API エンドポイント（auth, pacts, check_ins, rankings, ai, explore）
 │   │   ├── concerns/                # 認証 / レート制限など横断関心
+│   │   ├── public_pacts_controller.rb # /p/:id 公開契約シェアページ（OGP 埋め込み）
 │   │   └── home_controller.rb       # SPA shell（HTML 配信のみ）
 │   ├── models/                      # users, pacts, check_ins, crests, ai_generations, sessions
-│   ├── services/                    # PactCompleter, StreakCalculator, CrestGenerator, ai/*
+│   ├── services/
+│   │   ├── pact_completer.rb        # compliance_rate ≥ 0.5 で completed 化
+│   │   ├── streak_calculator.rb     # 連続記録の集計
+│   │   ├── crest_generator.rb       # レアリティ計算 + パーツ抽選
+│   │   ├── pact_og_image_generator.rb # 動的 OG 画像（現在は静的 PNG にフォールバック）
+│   │   ├── check_ins/               # チェックイン関連サービス
+│   │   └── ai/                      # GoalSuggester, ConstraintSuggester, DifficultyJudge, TitleGenerator, Logger
 │   ├── serializers/                 # alba ベース
+│   ├── views/layouts/               # OGP メタタグを埋め込む application.html.erb
 │   └── frontend/                    # vite_rails 規約
-│       ├── pages/                   # HomePage, AuthPage, CreatePactStep1〜4, SignedPage 等
-│       ├── components/              # Layout, Button, FormField, ShareButton 等
+│       ├── pages/                   # HomePage(ダッシュボード), ExplorePage(広場), HowItWorksPage,
+│       │                            # AuthPage, CreatePactStep1〜4, SignedPage, PactDetailPage,
+│       │                            # PublicPactPage, RankingsPage, SettingsPage,
+│       │                            # ForgotPasswordPage, ResetPasswordPage
+│       ├── components/              # Layout, BottomTabs, Footer, RequireAuth,
+│       │                            # Button, FormField, Modal, ShareButton,
+│       │                            # HeraldicCrest(盾形紋章 SVG), PactSeal(蝋印 SVG),
+│       │                            # ProgressGrass(草式進捗), ContractCard(契約書カード),
+│       │                            # CornerOrnament, StarDivider,
+│       │                            # HallContent / HallStatsBlock / HallFilterBar / CrestCatalog
 │       ├── hooks/                   # useAuth, useAi
 │       ├── contexts/                # CreatePactContext
 │       ├── lib/                     # api fetch wrapper, share builder
 │       ├── constants/               # 文言テンプレート
+│       ├── styles/                  # application.css（@theme で羊皮紙系トークン定義）
 │       └── types/                   # TypeScript 型定義
+│
+├── public/
+│   ├── og.png                       # ブランド OGP 画像（1200×630、静的）
+│   └── robots.txt                   # Twitterbot / facebookexternalhit 等に明示的 Allow
 │
 ├── spec/                            # RSpec
 │   ├── models/
@@ -167,6 +207,7 @@ vow_pact/
 │   └── factories/
 │
 ├── docs/
+│   ├── architecture.md              # アーキテクチャと設計判断
 │   ├── data_model.md                # ER 図 + テーブル仕様
 │   ├── api_design.md                # API 設計判断記録
 │   ├── setup_guide.md               # 詳細セットアップ手順
