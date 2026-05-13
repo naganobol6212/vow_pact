@@ -69,9 +69,20 @@ Rails.application.configure do
     compress_threshold: 1.kilobyte
   }
 
-  # Replace the default in-process and non-durable queuing backend for Active Job.
-  config.active_job.queue_adapter = :solid_queue
-  config.solid_queue.connects_to = { database: { writing: :queue } }
+  # Active Job 実行アダプタ。
+  #
+  # 当面は :inline（同期実行）を採用する。理由:
+  #   - Solid Queue を本格運用するには worker プロセス（または SOLID_QUEUE_IN_PUMA）と
+  #     専用テーブル（db/queue_migrate）の運用が必要だが、Render Free tier の
+  #     RAM 制約下では worker を別途動かす余裕がない。
+  #   - 現状のジョブ（Active Storage の PurgeJob など）は瞬時に完了するため、
+  #     同期実行で実害がない。
+  #   - 過去に Solid Queue のテーブル（solid_queue_jobs）が本番に作られておらず、
+  #     Active Storage の has_one_attached 上書き時に PurgeJob のエンキューで
+  #     500 が発生していたため、まずは確実に動く inline に倒す。
+  # 将来 AI 呼び出しの非同期化など本格的な job 運用が必要になった段階で、
+  # `bin/rails solid_queue:install` で migration を生成して有効化し直す。
+  config.active_job.queue_adapter = :inline
 
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
