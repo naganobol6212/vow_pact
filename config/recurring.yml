@@ -9,16 +9,16 @@
 #     priority: 2
 #     schedule: at 5am every day
 
-# 本番の Active Job は :inline 採用（Solid Queue 不使用）のため、
-# Solid Queue Scheduler は動いておらず、ここの recurring 定義は現状無効。
-# 将来 Solid Queue を有効化したら以下の定義が動き始める。
-production:
-  clear_solid_queue_finished_jobs:
-    command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
-    schedule: every hour at minute 12
-  # 30 日経過しても本登録に昇格していないゲストユーザーをクリーンアップ。
-  # 関連する Pact / CheckIn / Crest / Session / AiGeneration も dependent: :destroy で連鎖削除。
-  cleanup_expired_guests:
-    class: CleanupExpiredGuestsJob
-    queue: default
-    schedule: every day at 3am
+# Solid Queue Scheduler 用の recurring 定義。
+# 本番は queue_adapter :inline + solid_queue gem 不採用のため、現状すべて無効。
+# 将来 Solid Queue を本格運用したらコメントを外して有効化する。
+# production:
+#   clear_solid_queue_finished_jobs:
+#     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
+#     schedule: every hour at minute 12
+#   # 30 日経過しても本登録に昇格していないゲストユーザーをクリーンアップ。
+#   # 関連する Pact / CheckIn / Crest / Session / AiGeneration も dependent: :destroy で連鎖削除。
+#   cleanup_expired_guests:
+#     class: CleanupExpiredGuestsJob
+#     queue: default
+#     schedule: every day at 3am
