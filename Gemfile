@@ -20,10 +20,14 @@ gem "rails-i18n"
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
-# Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
-gem "solid_cache"
-gem "solid_queue"
-gem "solid_cable"
+# Solid Trifecta（Rails 8 標準の DB ベース cache/queue/cable）は現状未採用。
+#   ・cache:  MemoryStore（config/environments/production.rb で in-process 64MB）
+#   ・queue:  :inline（worker プロセスを動かす余裕がないため同期実行）
+#   ・cable:  :async（ActionCable は実質未使用）
+# gem を入れたままだと eager_load 時に SolidCache::Record などが connects_to を
+# 解決しようとしてエラーになるため、未使用の本 3 gem は Gemfile から外す。
+# 将来本格導入する場合は bundle add solid_cache solid_queue solid_cable して、
+# 各種 install ジェネレータで migration を生成すること。
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
